@@ -4,12 +4,12 @@ export interface DatabaseCapabilities {
   supportsRowLevelSecurity: boolean;
   supportsPooling: boolean;
   supportsAutoIncrement: boolean;
-  providerType: 'postgresql' | 'sqlite';
+  providerType: 'postgresql' | 'sqlite' | 'mysql' | 'oracle';
 }
 
 export interface DatabaseMetadata {
-  provider: 'postgresql' | 'sqlite';
-  vendor: 'neon' | 'supabase' | 'self-hosted' | 'generic' | 'local_sqlite';
+  provider: 'postgresql' | 'sqlite' | 'mysql' | 'oracle' | string;
+  vendor: 'neon' | 'supabase' | 'self-hosted' | 'generic' | 'local_sqlite' | 'mysql' | 'oracle' | string;
   host?: string;
   port?: number;
   database?: string;
@@ -29,7 +29,7 @@ export interface QueryResult<T = any> {
 export interface DatabaseProviderAdapter {
   id: string;
   name: string;
-  providerType: 'postgresql' | 'sqlite';
+  providerType: 'postgresql' | 'sqlite' | 'mysql' | 'oracle';
   
   connect(): Promise<void>;
   disconnect(): Promise<void>;

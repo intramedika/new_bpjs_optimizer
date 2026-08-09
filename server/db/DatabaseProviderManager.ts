@@ -1,6 +1,8 @@
 import { DatabaseProviderAdapter, DatabaseCapabilities, DatabaseMetadata, QueryResult } from "./DatabaseProvider";
 import { SQLiteProvider } from "./providers/SQLiteProvider";
 import { PostgreSQLProvider } from "./providers/PostgreSQLProvider";
+import { mySQLProvider } from "./providers/MySQLProvider";
+import { oracleProvider } from "./providers/OracleProvider";
 import { databaseConfigRepository, DatabaseConfigRecord } from "./DatabaseConfigRepository";
 import { SecretManager } from "./SecretManager";
 
@@ -29,6 +31,10 @@ export class DatabaseProviderManager {
         vendor: config.vendor as any || 'neon',
         maxPoolSize: config.maxPoolSize || 10
       });
+    } else if (config.provider === "mysql") {
+      return mySQLProvider;
+    } else if (config.provider === "oracle") {
+      return oracleProvider;
     } else {
       return new SQLiteProvider();
     }
@@ -39,7 +45,7 @@ export class DatabaseProviderManager {
   }
 
   async testConnection(configPayload: {
-    provider: 'postgresql' | 'sqlite';
+    provider: 'postgresql' | 'sqlite' | 'mysql' | 'oracle' | string;
     vendor?: string;
     connectionString?: string;
     host?: string;

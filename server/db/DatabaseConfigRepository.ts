@@ -2,8 +2,8 @@ import { SecretManager } from "./SecretManager";
 
 export interface DatabaseConfigRecord {
   id: string;
-  provider: 'postgresql' | 'sqlite';
-  vendor: 'neon' | 'supabase' | 'self-hosted' | 'generic' | 'local_sqlite';
+  provider: 'postgresql' | 'sqlite' | 'mysql' | 'oracle' | string;
+  vendor: 'neon' | 'supabase' | 'self-hosted' | 'generic' | 'local_sqlite' | 'mysql' | 'oracle' | string;
   environment: 'LOCAL' | 'DEVELOPMENT' | 'PREVIEW' | 'PRODUCTION';
   host?: string;
   port?: number;
