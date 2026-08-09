@@ -20,7 +20,36 @@ export default function AdminDatabaseConsole() {
   const [validating, setValidating] = useState(false);
   const [migrating, setMigrating] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [purging, setPurging] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
+
+  const handlePurgeData = async () => {
+    if (!window.confirm("APAKAH ANDA YAKIN? Tindakan ini akan menghapus SELURUH data klaim, dokumen PDF intake, bukti klinis, dan riwayat transaksi dari database.")) return;
+    setPurging(true);
+    setActionMessage(null);
+    try {
+      const res = await fetch("/api/admin/purge-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": "usr-admin-001"
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.removeItem("bpjs_documents_store");
+        localStorage.removeItem("bpjs_claims_store");
+        setActionMessage({ type: 'success', text: data.message });
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setActionMessage({ type: 'error', text: "Gagal menghapus data: " + (data.error || "Unknown error") });
+      }
+    } catch (e: any) {
+      setActionMessage({ type: 'error', text: "Gagal menghapus data: " + e.message });
+    } finally {
+      setPurging(false);
+    }
+  };
 
   // Form State for Staged Database Configuration
   const [provider, setProvider] = useState<'postgresql' | 'sqlite' | 'mysql' | 'oracle'>('postgresql');
@@ -590,6 +619,28 @@ export default function AdminDatabaseConsole() {
                 <Badge className="bg-emerald-600 text-white font-bold">PASS</Badge>
               </div>
             </CardContent>
+          </Card>
+
+          {/* E. DATA PURGE & SYSTEM RESET CARD */}
+          <Card className="border border-red-200 bg-red-50/50 shadow-sm p-4 space-y-3 font-mono">
+            <div className="flex items-center justify-between border-b border-red-200 pb-2 font-sans">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <h4 className="text-xs font-bold uppercase text-slate-900">E. DATA PURGE & RESET</h4>
+              </div>
+              <Badge className="bg-red-600 text-white font-bold text-[9px]">DANGER ZONE</Badge>
+            </div>
+            <p className="text-[11px] text-slate-600 font-sans leading-relaxed">
+              Hapus seluruh data klaim, dokumen PDF intake, bukti klinis, dan transaksi yang sudah terlanjur masuk.
+            </p>
+            <Button 
+              onClick={handlePurgeData} 
+              disabled={purging}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs"
+            >
+              {purging ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <AlertTriangle className="w-4 h-4 mr-2" />}
+              [ HAPUS SEMUA DATA TRANSAKSI ]
+            </Button>
           </Card>
         </div>
       </div>

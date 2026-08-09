@@ -30,10 +30,40 @@ export default function Admin() {
   const [loading, setLoading] = useState<boolean>(true)
   const [activeTab, setActiveTab] = useState<"hospitals" | "tenants" | "users" | "audit">("hospitals")
 
-  // Modal State
+  // Modal & Purge State
   const [showAddHospital, setShowAddHospital] = useState<boolean>(false)
   const [newHospital, setNewHospital] = useState({ name: "", code: "", timezone: "Asia/Jakarta" })
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [purging, setPurging] = useState<boolean>(false)
+  const [purgeMessage, setPurgeMessage] = useState<string | null>(null)
+
+  const handlePurgeData = async () => {
+    if (!window.confirm("APAKAH ANDA YAKIN? Tindakan ini akan menghapus SELURUH data klaim, dokumen PDF intake, bukti klinis, dan riwayat transaksi dari database.")) return;
+    setPurging(true);
+    setPurgeMessage(null);
+    try {
+      const res = await fetch("/api/admin/purge-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": currentUser?.userId || "usr-admin-001"
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.removeItem("bpjs_documents_store");
+        localStorage.removeItem("bpjs_claims_store");
+        setPurgeMessage(data.message);
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        alert("Gagal menghapus data: " + (data.error || "Unknown error"));
+      }
+    } catch (e: any) {
+      alert("Gagal menghapus data: " + e.message);
+    } finally {
+      setPurging(false);
+    }
+  };
 
   useEffect(() => {
     fetchAdminData()
@@ -295,6 +325,38 @@ export default function Admin() {
           </div>
         </Card>
       )}
+
+      {/* SYSTEM DATA PURGE & RESET CARD */}
+      <Card className="border border-red-200 bg-red-50/50 p-6 shadow-sm rounded-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-red-200 pb-3 font-sans">
+          <div>
+            <div className="flex items-center gap-2 font-mono">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <h3 className="text-sm font-bold uppercase text-slate-900">E. DATA PURGE & SYSTEM RESET CONSOLE</h3>
+              <Badge className="bg-red-600 text-white font-bold text-[9px]">ADMIN DANGER ZONE</Badge>
+            </div>
+            <p className="text-xs text-slate-600 mt-1">
+              Hapus seluruh data klaim, dokumen PDF intake, bukti klinis, hasil grouper, dan antrean sync yang telah terlanjur masuk di sistem.
+            </p>
+          </div>
+
+          <Button 
+            onClick={handlePurgeData} 
+            disabled={purging}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs shrink-0"
+          >
+            {purging ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <AlertTriangle className="w-4 h-4 mr-2" />}
+            [ HAPUS SEMUA DATA TRANSAKSI & DOKUMEN ]
+          </Button>
+        </div>
+
+        {purgeMessage && (
+          <div className="p-3.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-950 text-xs font-bold font-mono flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{purgeMessage}</span>
+          </div>
+        )}
+      </Card>
 
       {/* Add Hospital Modal */}
       {showAddHospital && (

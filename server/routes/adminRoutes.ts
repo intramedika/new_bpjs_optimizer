@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/Database";
+import { databaseProviderManager } from "../db/DatabaseProviderManager";
 import { resolvePrincipalFromRequest } from "../security/SecurityContext";
 
 export const adminRoutes = Router();
@@ -143,5 +144,54 @@ adminRoutes.get("/api/admin/context", async (req, res) => {
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/purge-data - Purge All Claims, Documents & Transactions
+adminRoutes.post("/api/admin/purge-data", async (req, res) => {
+  try {
+    const tables = [
+      "clinical_findings",
+      "coding_candidates",
+      "reconciliation_records",
+      "revenue_opportunities",
+      "claims",
+      "documents",
+      "sync_queue",
+      "integration_executions",
+      "integration_job_queue"
+    ];
+
+    let purgedCount = 0;
+
+    // 1. Purge Active Provider (Cloud PostgreSQL / Active DB)
+    for (const table of tables) {
+      try {
+        const queryResult = await databaseProviderManager.getAdapter().query(`DELETE FROM ${table}`);
+        purgedCount += queryResult.rowCount || 0;
+      } catch (e) {
+        console.warn(`[PurgeData] Active DB purge note for ${table}:`, e);
+      }
+    }
+
+    // 2. Purge Local SQLite DB
+    for (const table of tables) {
+      try {
+        db.prepare(`DELETE FROM ${table}`).run();
+      } catch (e) {
+        console.warn(`[PurgeData] Local SQLite purge note for ${table}:`, e);
+      }
+    }
+
+    res.json({
+      status: "success",
+      message: "Seluruh data klaim, dokumen PDF intake, bukti klinis, dan riwayat transaksi berhasil dihapus.",
+      purgedTablesCount: tables.length,
+      purgedRecordsCount: purgedCount,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    console.error("[PurgeData] Failed to purge transactions:", error);
+    res.status(500).json({ error: "Gagal menghapus data transaksi: " + error.message });
   }
 });
