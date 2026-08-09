@@ -84,7 +84,7 @@ export default function RiskEngine() {
       </div>
 
       {/* STATE A: NO CLAIMS EXIST IN DATABASE */}
-      {claims.length === 0 ? (
+      {claims.length === 0 && !activeClaim ? (
         <Card className="border border-slate-200 bg-slate-50/50 p-12 text-center my-4 font-sans">
           <CardContent className="space-y-4 max-w-md mx-auto p-0">
             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
