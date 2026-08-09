@@ -29,35 +29,27 @@ export class DatabaseConfigRepository {
 
   constructor() {
     // Default initial active configuration
-    const envUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-    if (envUrl) {
-      const enc = SecretManager.encrypt(envUrl);
-      this.activeConfig = {
-        id: "cfg-active-postgres",
-        provider: "postgresql",
-        vendor: "neon",
-        environment: (process.env.VERCEL_ENV?.toUpperCase() as any) || (process.env.NODE_ENV === "production" ? "PRODUCTION" : "DEVELOPMENT"),
-        encryptedConnString: enc.encryptedData,
-        ivConnString: enc.iv,
-        tagConnString: enc.tag,
-        sslMode: "require",
-        maxPoolSize: 10,
-        status: "ACTIVE",
-        updatedAt: new Date().toISOString(),
-        updatedBy: "SYSTEM_ENV"
-      };
-    } else {
-      this.activeConfig = {
-        id: "cfg-active-sqlite",
-        provider: "sqlite",
-        vendor: "local_sqlite",
-        environment: "LOCAL",
-        database: "local_edge.db",
-        status: "ACTIVE",
-        updatedAt: new Date().toISOString(),
-        updatedBy: "SYSTEM_DEFAULT"
-      };
-    }
+    const defaultConnStr = process.env.DATABASE_URL || process.env.POSTGRES_URL || "postgresql://neondb_owner:npg_U3bDYVZSExj5@ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require";
+    const enc = SecretManager.encrypt(defaultConnStr);
+    
+    this.activeConfig = {
+      id: "cfg-active-postgres",
+      provider: "postgresql",
+      vendor: "neon",
+      environment: (process.env.VERCEL_ENV?.toUpperCase() as any) || (process.env.NODE_ENV === "production" ? "PRODUCTION" : "DEVELOPMENT"),
+      host: "ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech",
+      port: 5432,
+      database: "neondb",
+      username: "neondb_owner",
+      encryptedConnString: enc.encryptedData,
+      ivConnString: enc.iv,
+      tagConnString: enc.tag,
+      sslMode: "require",
+      maxPoolSize: 10,
+      status: "ACTIVE",
+      updatedAt: new Date().toISOString(),
+      updatedBy: "ADMIN_NEON_CONFIG"
+    };
   }
 
   getActiveConfig(): DatabaseConfigRecord {

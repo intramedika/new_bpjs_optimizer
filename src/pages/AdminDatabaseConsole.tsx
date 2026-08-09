@@ -23,15 +23,15 @@ export default function AdminDatabaseConsole() {
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
 
   // Form State for Staged Database Configuration
-  const [provider, setProvider] = useState<'postgresql' | 'sqlite'>('postgresql');
+  const [provider, setProvider] = useState<'postgresql' | 'sqlite' | 'mysql' | 'oracle'>('postgresql');
   const [vendor, setVendor] = useState<string>('neon');
   const [environment, setEnvironment] = useState<string>('PRODUCTION');
-  const [host, setHost] = useState<string>('ep-cool-lake-a5123.us-east-2.aws.neon.tech');
+  const [host, setHost] = useState<string>('ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech');
   const [port, setPort] = useState<number>(5432);
   const [database, setDatabase] = useState<string>('neondb');
   const [username, setUsername] = useState<string>('neondb_owner');
   const [password, setPassword] = useState<string>('');
-  const [connectionString, setConnectionString] = useState<string>('');
+  const [connectionString, setConnectionString] = useState<string>('postgresql://neondb_owner:npg_U3bDYVZSExj5@ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require');
   const [sslMode, setSslMode] = useState<string>('require');
   const [maxPoolSize, setMaxPoolSize] = useState<number>(10);
 
@@ -69,18 +69,18 @@ export default function AdminDatabaseConsole() {
         setActiveConfig(cfgData.active);
         setProvider(cfgData.active.provider || 'postgresql');
         setVendor(cfgData.active.vendor || 'neon');
-        setHost(cfgData.active.host || '');
-        setDatabase(cfgData.active.database || '');
-        setUsername(cfgData.active.username || '');
+        setHost(cfgData.active.host || 'ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech');
+        setDatabase(cfgData.active.database || 'neondb');
+        setUsername(cfgData.active.username || 'neondb_owner');
       } else {
-        // Fallback default state
+        // Fallback active status
         setHealthData({
           status: "connected",
           provider: "POSTGRESQL",
           vendor: "NEON",
           environment: "PRODUCTION",
-          latencyMs: 12,
-          metadata: { host: "ep-cool-lake-a5123.us-east-2.aws.neon.tech", database: "neondb" }
+          latencyMs: 14,
+          metadata: { host: "ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech", database: "neondb" }
         });
       }
       if (cfgData?.draft) setDraftConfig(cfgData.draft);
@@ -331,7 +331,7 @@ export default function AdminDatabaseConsole() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                 <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
                   <span className="text-[10px] text-slate-500 font-sans block font-semibold">Host Endpoint</span>
-                  <strong className="text-slate-900 font-mono text-xs block truncate mt-0.5">{healthData?.metadata?.host || activeConfig?.host || "ep-cool-lake-a5123.us-east-2.aws.neon.tech"}</strong>
+                  <strong className="text-slate-900 font-mono text-xs block truncate mt-0.5">{healthData?.metadata?.host || activeConfig?.host || "ep-polished-wind-ax05l539-pooler.c-4.us-east-2.aws.neon.tech"}</strong>
                 </div>
                 <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
                   <span className="text-[10px] text-slate-500 font-sans block font-semibold">Database Name</span>
