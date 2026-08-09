@@ -1,21 +1,24 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 🏥 BPJS OPTIMIZER — AI Claim Intelligence & Enterprise Integration Platform
 
-# Run and deploy your AI Studio app
+An enterprise healthcare claim intelligence platform designed for Indonesian hospital networks (RS), Casemix teams, and BPJS Health claim optimization.
 
-This contains everything you need to run your app locally.
+## 🚀 Key Features
 
-View your app in AI Studio: https://ai.studio/apps/e8dcf029-cd2c-44da-adf9-5065ffc8a44d
+- **Smart Document Intake**: Automated PDF medical resume intake & OCR ingestion.
+- **Clinical Intelligence**: Evidence-backed entity extraction (Diagnoses & Procedures).
+- **Coding & Grouper Intelligence**: ICD-10 & ICD-9-CM validation, INA-CBG severity prediction, and tariff estimation.
+- **Claim Readiness & Risk Engine**: Dynamic readiness scoring and compliance risk evaluation.
+- **Pluggable Database Architecture**: Multi-provider support (Neon PostgreSQL, Supabase, Self-Hosted PostgreSQL, SQLite Edge) with AES-256-GCM secret encryption.
+- **Integration Hub**: Scoped integration adapters for SIMRS, E-Klaim INA-CBG, and BPJS VClaim.
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## 🛠️ Local Development
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-# new_bpjs_optimizer
+   ```bash
+   npm install
+   ```
+2. Start application:
+   ```bash
+   npm start
+   ```
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
