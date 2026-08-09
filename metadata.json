@@ -1,0 +1,8 @@
+{
+  "name": "BPJS Optimizer",
+  "description": "AI Claim Intelligence & Grouper Intelligence. Prepare. Validate. Predict. Optimize. Reconcile.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

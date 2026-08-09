@@ -1,0 +1,32 @@
+export const ROUTES = {
+  HOME: "/",
+  CLAIMS: "/klaim",
+  CLAIM_DETAIL: "/klaim/:id",
+  RECONCILIATION: "/klaim/reconciliation",
+  CLINICAL: "/analisis/clinical",
+  GROUPER: "/analisis/grouper",
+  READINESS: "/analisis/readiness",
+  RISK: "/analisis/risk",
+  INTEGRATION: "/integrasi",
+  MOCK: "/integrasi/mock",
+  SIMRS: "/integrasi/simrs",
+  SMART_INTAKE: "/smart-intake",
+  IMPORT: "/integrasi/import",
+  MAPPING: "/integrasi/mapping",
+  SYNC_MONITOR: "/integrasi/sync",
+  INTEGRATION_LOGS: "/integrasi/logs",
+  LOCAL_MODELS: "/local/models",
+  LOCAL_HEALTH: "/local/health",
+  LOCAL_QUEUE: "/local/queue",
+  TEST_CENTER: "/test-center",
+  DEMO_CENTER: "/demo-center",
+  SYSTEM_REPORT: "/report",
+  SETTINGS: "/pengaturan",
+  DOCUMENTATION: "/dokumentasi",
+  FAQ: "/faq",
+  ADMIN: "/admin",
+  ADMIN_DATABASE: "/admin/database",
+  LOGIN: "/login"
+} as const;
+
+export type RouteKey = keyof typeof ROUTES;

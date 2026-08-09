@@ -1,0 +1,151 @@
+export enum Role {
+  PLATFORM_ADMIN = 'PLATFORM_ADMIN',
+  TENANT_ADMIN = 'TENANT_ADMIN',
+  HOSPITAL_ADMIN = 'HOSPITAL_ADMIN',
+  CASEMIX_OFFICER = 'CASEMIX_OFFICER',
+  CODER = 'CODER',
+  CLINICAL_REVIEWER = 'CLINICAL_REVIEWER',
+  AUDITOR = 'AUDITOR'
+}
+
+export enum Permission {
+  CLAIM_READ = 'CLAIM.READ',
+  CLAIM_CREATE = 'CLAIM.CREATE',
+  CLAIM_UPDATE = 'CLAIM.UPDATE',
+  CLAIM_DELETE = 'CLAIM.DELETE',
+
+  CLINICAL_READ = 'CLINICAL.READ',
+  CLINICAL_REVIEW = 'CLINICAL.REVIEW',
+  CLINICAL_CONFIRM = 'CLINICAL.CONFIRM',
+  CLINICAL_REJECT = 'CLINICAL.REJECT',
+
+  CODING_READ = 'CODING.READ',
+  CODING_UPDATE = 'CODING.UPDATE',
+  CODING_APPROVE = 'CODING.APPROVE',
+
+  GROUPER_READ = 'GROUPER.READ',
+  GROUPER_EXECUTE = 'GROUPER.EXECUTE',
+
+  READINESS_READ = 'READINESS.READ',
+  READINESS_UPDATE = 'READINESS.UPDATE',
+
+  RISK_READ = 'RISK.READ',
+
+  REVENUE_READ = 'REVENUE.READ',
+  REVENUE_ANALYZE = 'REVENUE.ANALYZE',
+  REVENUE_APPROVE = 'REVENUE.APPROVE',
+  REVENUE_REJECT = 'REVENUE.REJECT',
+  REVENUE_APPLY = 'REVENUE.APPLY',
+
+  INTEGRATION_READ = 'INTEGRATION.READ',
+  INTEGRATION_EXECUTE = 'INTEGRATION.EXECUTE',
+
+  VCLAIM_READ = 'VCLAIM.READ',
+  VCLAIM_EXECUTE = 'VCLAIM.EXECUTE',
+
+  EKLAIM_READ = 'EKLAIM.READ',
+  EKLAIM_EXECUTE = 'EKLAIM.EXECUTE',
+
+  RECONCILIATION_READ = 'RECONCILIATION.READ',
+  RECONCILIATION_EXECUTE = 'RECONCILIATION.EXECUTE',
+
+  USER_READ = 'USER.READ',
+  USER_CREATE = 'USER.CREATE',
+  USER_UPDATE = 'USER.UPDATE',
+  USER_DISABLE = 'USER.DISABLE',
+
+  ROLE_READ = 'ROLE.READ',
+  ROLE_ASSIGN = 'ROLE.ASSIGN',
+
+  AUDIT_READ = 'AUDIT.READ',
+
+  SYSTEM_CONFIGURE = 'SYSTEM.CONFIGURE'
+}
+
+export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  [Role.PLATFORM_ADMIN]: Object.values(Permission),
+
+  [Role.TENANT_ADMIN]: [
+    Permission.CLAIM_READ, Permission.CLAIM_CREATE, Permission.CLAIM_UPDATE, Permission.CLAIM_DELETE,
+    Permission.CLINICAL_READ, Permission.CLINICAL_REVIEW, Permission.CLINICAL_CONFIRM, Permission.CLINICAL_REJECT,
+    Permission.CODING_READ, Permission.CODING_UPDATE, Permission.CODING_APPROVE,
+    Permission.GROUPER_READ, Permission.GROUPER_EXECUTE,
+    Permission.READINESS_READ, Permission.READINESS_UPDATE,
+    Permission.RISK_READ,
+    Permission.REVENUE_READ, Permission.REVENUE_ANALYZE, Permission.REVENUE_APPROVE, Permission.REVENUE_REJECT, Permission.REVENUE_APPLY,
+    Permission.INTEGRATION_READ, Permission.INTEGRATION_EXECUTE,
+    Permission.VCLAIM_READ, Permission.VCLAIM_EXECUTE,
+    Permission.EKLAIM_READ, Permission.EKLAIM_EXECUTE,
+    Permission.RECONCILIATION_READ, Permission.RECONCILIATION_EXECUTE,
+    Permission.USER_READ, Permission.USER_CREATE, Permission.USER_UPDATE, Permission.USER_DISABLE,
+    Permission.ROLE_READ, Permission.ROLE_ASSIGN,
+    Permission.AUDIT_READ
+  ],
+
+  [Role.HOSPITAL_ADMIN]: [
+    Permission.CLAIM_READ, Permission.CLAIM_CREATE, Permission.CLAIM_UPDATE,
+    Permission.CLINICAL_READ, Permission.CLINICAL_REVIEW, Permission.CLINICAL_CONFIRM, Permission.CLINICAL_REJECT,
+    Permission.CODING_READ, Permission.CODING_UPDATE, Permission.CODING_APPROVE,
+    Permission.GROUPER_READ, Permission.GROUPER_EXECUTE,
+    Permission.READINESS_READ, Permission.READINESS_UPDATE,
+    Permission.RISK_READ,
+    Permission.REVENUE_READ, Permission.REVENUE_ANALYZE, Permission.REVENUE_APPROVE, Permission.REVENUE_REJECT, Permission.REVENUE_APPLY,
+    Permission.INTEGRATION_READ, Permission.INTEGRATION_EXECUTE,
+    Permission.VCLAIM_READ, Permission.VCLAIM_EXECUTE,
+    Permission.EKLAIM_READ, Permission.EKLAIM_EXECUTE,
+    Permission.RECONCILIATION_READ, Permission.RECONCILIATION_EXECUTE,
+    Permission.USER_READ, Permission.USER_CREATE, Permission.USER_UPDATE,
+    Permission.ROLE_READ,
+    Permission.AUDIT_READ
+  ],
+
+  [Role.CASEMIX_OFFICER]: [
+    Permission.CLAIM_READ, Permission.CLAIM_CREATE, Permission.CLAIM_UPDATE,
+    Permission.CLINICAL_READ, Permission.CLINICAL_REVIEW, Permission.CLINICAL_CONFIRM, Permission.CLINICAL_REJECT,
+    Permission.CODING_READ, Permission.CODING_UPDATE, Permission.CODING_APPROVE,
+    Permission.GROUPER_READ, Permission.GROUPER_EXECUTE,
+    Permission.READINESS_READ, Permission.READINESS_UPDATE,
+    Permission.RISK_READ,
+    Permission.REVENUE_READ, Permission.REVENUE_ANALYZE, Permission.REVENUE_APPROVE, Permission.REVENUE_REJECT, Permission.REVENUE_APPLY,
+    Permission.INTEGRATION_READ, Permission.INTEGRATION_EXECUTE,
+    Permission.VCLAIM_READ, Permission.VCLAIM_EXECUTE,
+    Permission.EKLAIM_READ, Permission.EKLAIM_EXECUTE,
+    Permission.RECONCILIATION_READ, Permission.RECONCILIATION_EXECUTE,
+    Permission.AUDIT_READ
+  ],
+
+  [Role.CODER]: [
+    Permission.CLAIM_READ,
+    Permission.CLINICAL_READ,
+    Permission.CODING_READ, Permission.CODING_UPDATE, Permission.CODING_APPROVE,
+    Permission.GROUPER_READ, Permission.GROUPER_EXECUTE,
+    Permission.REVENUE_READ, Permission.REVENUE_ANALYZE, Permission.REVENUE_APPROVE, Permission.REVENUE_REJECT,
+    Permission.READINESS_READ
+  ],
+
+  [Role.CLINICAL_REVIEWER]: [
+    Permission.CLAIM_READ,
+    Permission.CLINICAL_READ, Permission.CLINICAL_REVIEW, Permission.CLINICAL_CONFIRM, Permission.CLINICAL_REJECT,
+    Permission.READINESS_READ
+  ],
+
+  [Role.AUDITOR]: [
+    Permission.CLAIM_READ,
+    Permission.CLINICAL_READ,
+    Permission.CODING_READ,
+    Permission.GROUPER_READ,
+    Permission.READINESS_READ,
+    Permission.RISK_READ,
+    Permission.REVENUE_READ,
+    Permission.INTEGRATION_READ,
+    Permission.VCLAIM_READ,
+    Permission.EKLAIM_READ,
+    Permission.RECONCILIATION_READ,
+    Permission.AUDIT_READ
+  ]
+};
+
+export function hasPermission(role: Role, permission: Permission): boolean {
+  const permissions = ROLE_PERMISSIONS[role] || [];
+  return permissions.includes(permission);
+}
