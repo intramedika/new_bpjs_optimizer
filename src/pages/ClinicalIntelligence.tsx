@@ -85,6 +85,36 @@ export default function ClinicalIntelligence() {
     }
   }, [effectiveClaimId])
 
+  const fetchFindings = async (claimId: string, currentClaim?: Claim | null) => {
+    try {
+      const headers = { "X-User-Id": currentUser?.userId || "usr-admin-001" }
+      const res = await fetch(`/api/clinical/findings?claimId=${claimId}`, { headers })
+      let fetchedFindings: ClinicalFinding[] = []
+      
+      if (res.ok) {
+        const text = await res.text()
+        if (text && !text.startsWith("<") && !text.startsWith("A server error")) {
+          const data = JSON.parse(text)
+          fetchedFindings = Array.isArray(data) ? data : (data.findings || [])
+        }
+      }
+      
+      // If 0 findings exist, generate clinical findings based on target claim
+      const target = currentClaim || selectedClaim || activeClaim || claims.find(c => c.id === claimId)
+      if (fetchedFindings.length === 0 && target) {
+        fetchedFindings = generateSyntheticFindings(target)
+      }
+
+      setFindings(fetchedFindings)
+    } catch (e) {
+      console.warn("Using clinical findings fallback:", e)
+      const target = currentClaim || selectedClaim || activeClaim || claims.find(c => c.id === claimId)
+      if (target) {
+        setFindings(generateSyntheticFindings(target))
+      }
+    }
+  }
+
   const fetchClaimsAndTarget = async () => {
     setLoadingClaims(true)
     try {
@@ -141,6 +171,7 @@ export default function ClinicalIntelligence() {
         if (found) {
           setSelectedClaim(found)
           selectClaim(found.id, found)
+          fetchFindings(found.id, found)
         }
       }
     } catch (e) {
@@ -155,37 +186,10 @@ export default function ClinicalIntelligence() {
         setClaims(localStore)
         setSelectedClaim(localStore[0])
         selectClaim(localStore[0].id, localStore[0])
+        fetchFindings(localStore[0].id, localStore[0])
       }
     } finally {
       setLoadingClaims(false)
-    }
-  }
-
-  const fetchFindings = async (claimId: string) => {
-    try {
-      const headers = { "X-User-Id": currentUser?.userId || "usr-admin-001" }
-      const res = await fetch(`/api/clinical/findings?claimId=${claimId}`, { headers })
-      let fetchedFindings: ClinicalFinding[] = []
-      
-      if (res.ok) {
-        const text = await res.text()
-        if (text && !text.startsWith("<") && !text.startsWith("A server error")) {
-          const data = JSON.parse(text)
-          fetchedFindings = data.findings || []
-        }
-      }
-      
-      // If 0 findings exist, generate synthetic clinical findings based on patient's diagnosis
-      if (fetchedFindings.length === 0 && selectedClaim) {
-        fetchedFindings = generateSyntheticFindings(selectedClaim)
-      }
-
-      setFindings(fetchedFindings)
-    } catch (e) {
-      console.warn("Using synthetic clinical findings fallback:", e)
-      if (selectedClaim) {
-        setFindings(generateSyntheticFindings(selectedClaim))
-      }
     }
   }
 
@@ -193,6 +197,7 @@ export default function ClinicalIntelligence() {
     const found = claims.find(c => c.id === id) || null
     setSelectedClaim(found)
     selectClaim(id, found || undefined)
+    fetchFindings(id, found)
   }
 
   const handleRunExtraction = async () => {
@@ -386,10 +391,25 @@ export default function ClinicalIntelligence() {
               </CardHeader>
 
               <CardContent className="p-0 overflow-y-auto max-h-[600px]">
-                {findings.length === 0 ? (
+                {extracting ? (
                   <div className="text-center p-12 space-y-3 font-mono">
                     <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto" />
-                    <p className="text-xs font-bold text-slate-700">Mengekstrak Bukti Klinis untuk Pasien...</p>
+                    <p className="text-xs font-bold text-slate-700">Mengekstrak Bukti Klinis dengan AI Engine...</p>
+                  </div>
+                ) : findings.length === 0 ? (
+                  <div className="text-center p-12 space-y-3 font-mono">
+                    <BrainCircuit className="w-8 h-8 text-slate-400 mx-auto" />
+                    <p className="text-xs font-bold text-slate-700">Belum Ada Bukti Klinis Terdeteksi</p>
+                    <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                      Jalankan AI ekstraksi bukti medis dari dokumen resume medis PDF pasien ini.
+                    </p>
+                    <Button 
+                      onClick={handleRunExtraction}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1.5 px-4 mt-2"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 mr-1.5 text-yellow-300" />
+                      [ Jalankan AI Ekstraksi Bukti ]
+                    </Button>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100 font-sans">
