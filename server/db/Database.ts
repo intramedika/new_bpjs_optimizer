@@ -354,7 +354,8 @@ db.exec(`
 `);
 
 // Seed Default Organizational Hierarchy if Empty
-const tenantCount = (db.prepare("SELECT count(*) as count FROM tenants").get() as { count: number }).count;
+const tenantRes = db.prepare("SELECT count(*) as count FROM tenants").get();
+const tenantCount = tenantRes ? (tenantRes as any).count : 0;
 if (tenantCount === 0) {
   const now = new Date().toISOString();
   db.prepare(`INSERT INTO tenants (id, name, code, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`).run(
@@ -378,7 +379,8 @@ if (tenantCount === 0) {
 }
 
 // Seed Golden Persistent Claim for Vercel Cold-Start & Multi-Tenant Persona Visibility
-const claimsCount = (db.prepare("SELECT count(*) as count FROM claims").get() as { count: number }).count;
+const claimsRes = db.prepare("SELECT count(*) as count FROM claims").get();
+const claimsCount = claimsRes ? (claimsRes as any).count : 0;
 if (claimsCount === 0) {
   const goldenClaim: any = {
     id: "CLM-PDF-1786296088348",
