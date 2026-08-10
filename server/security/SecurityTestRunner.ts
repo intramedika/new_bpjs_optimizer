@@ -2,7 +2,7 @@ import { SEEDED_PRINCIPALS, ServerPrincipal } from "./SecurityContext";
 import { Role, Permission, hasPermission } from "./Roles";
 import { claimRepository } from "../repositories/ClaimRepository";
 import { auditLogger } from "./AuditLogger";
-import app from "../../api/index";
+import app from "../api_entry";
 import http from "http";
 
 export interface SecurityTestCase {
