@@ -101,6 +101,106 @@ app.get(["/api/claims/:id", "/claims/:id"], requirePermission(Permission.CLAIM_R
   res.json(claim);
 });
 
+app.post(["/api/claims", "/claims"], requirePermission(Permission.CLAIM_CREATE), async (req, res) => {
+  const principal = (req as any).principal || resolvePrincipalFromRequest(req);
+  const { documentId, patient, sepNumber, patientId } = req.body || {};
+
+  const tenantId = principal.tenantId || "tenant-pt-health";
+  const hospitalId = principal.hospitalId || "hospital-jkt";
+
+  if (!documentId) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: "DOCUMENT_ID_REQUIRED",
+        message: "Source documentId is required for claim creation."
+      }
+    });
+  }
+
+  // Load document record & validated extraction server-side
+  const docRecord = await documentRepository.findById(documentId).catch(() => null);
+  if (!docRecord) {
+    return res.status(404).json({
+      success: false,
+      error: {
+        code: "DOCUMENT_NOT_FOUND",
+        message: `Source document ${documentId} not found.`
+      }
+    });
+  }
+
+  const extraction = docRecord.extraction || {};
+  const expectedName = (extraction.patientName || "").trim().toUpperCase();
+  const expectedMrn = (extraction.mrNumber || "").trim().toUpperCase();
+  const expectedSep = (extraction.sepNumber || "").trim().toUpperCase();
+
+  const payloadName = (patient?.name || "").trim().toUpperCase();
+  const payloadMrn = (patient?.mrNumber || patientId || "").trim().toUpperCase();
+  const payloadSep = (sepNumber || "").trim().toUpperCase();
+
+  // DOCUMENT_IDENTITY_MISMATCH Validation Gate
+  if (
+    (expectedName && payloadName && expectedName !== payloadName) ||
+    (expectedMrn && payloadMrn && expectedMrn !== payloadMrn) ||
+    (expectedSep && payloadSep && expectedSep !== payloadSep)
+  ) {
+    console.warn(`[IDENTITY MISMATCH REJECTED] Expected (${expectedName}, ${expectedMrn}, ${expectedSep}) vs Payload (${payloadName}, ${payloadMrn}, ${payloadSep})`);
+    return res.status(409).json({
+      success: false,
+      error: {
+        code: "DOCUMENT_IDENTITY_MISMATCH",
+        message: "Extracted patient identity does not match the selected document."
+      }
+    });
+  }
+
+  const claimId = req.body.id || `CLM-PDF-${Date.now()}`;
+  const claimPayload = {
+    ...req.body,
+    id: claimId,
+    documentId,
+    sourceReference: documentId,
+    tenantId,
+    hospitalId,
+    groupId: principal.groupId || "group-nusantara",
+    patient: {
+      id: expectedMrn || payloadMrn,
+      name: expectedName || payloadName,
+      mrNumber: expectedMrn || payloadMrn,
+      gender: patient?.gender || "L",
+      dob: patient?.dob || "1985-01-01"
+    },
+    sepNumber: expectedSep || payloadSep,
+    patientId: expectedMrn || payloadMrn
+  };
+
+  const created = await claimRepository.create(claimPayload, {
+    tenantId,
+    hospitalId,
+    groupId: principal.groupId,
+    userId: principal.userId,
+    role: principal.role
+  });
+
+  // Record Audit Log Entry
+  console.log(`[CLAIM_CREATED_AUDIT] timestamp=${new Date().toISOString()} claimId=${claimId} documentId=${documentId} tenantId=${tenantId} hospitalId=${hospitalId} patientName="${expectedName || payloadName}" createdBy=${principal.userId}`);
+
+  res.status(201).json({
+    status: "success",
+    claim: created,
+    auditLog: {
+      documentId,
+      claimId,
+      tenantId,
+      hospitalId,
+      sourceFilename: docRecord.name,
+      createdBy: principal.userId,
+      timestamp: new Date().toISOString()
+    }
+  });
+});
+
 app.put(["/api/claims/:id", "/claims/:id"], requirePermission(Permission.CLAIM_UPDATE), authorizeClaimResource, async (req, res) => {
   const principal = (req as any).principal || resolvePrincipalFromRequest(req);
   try {
