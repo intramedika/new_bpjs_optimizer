@@ -52,33 +52,47 @@ export const ClaimProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const fetchClaims = async () => {
     try {
-      const res = await fetch(`/api/claims?dataMode=ALL`);
-      const data = await res.json();
-      const apiList: Claim[] = Array.isArray(data) ? data : (data.claims || []);
+      let apiList: Claim[] = [];
+      try {
+        const res = await fetch(`/api/claims?dataMode=ALL`);
+        if (res.ok) {
+          const text = await res.text();
+          if (text && !text.startsWith("<") && !text.startsWith("A server error")) {
+            const data = JSON.parse(text);
+            apiList = Array.isArray(data) ? data : (data.claims || []);
+          }
+        }
+      } catch (err) {
+        console.warn("[ClaimContext] Server fetch fallback:", err);
+      }
 
       // Merge API claims with browser persistent claims store
+      let localStore: Claim[] = [];
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store");
+        if (saved) localStore = JSON.parse(saved);
+      } catch (e) {}
+
       const mergedList = [...apiList];
-      claims.forEach(c => {
+      localStore.forEach(c => {
         if (c && c.id && !mergedList.some(m => m.id === c.id)) {
           mergedList.unshift(c);
         }
       });
 
-      setClaims(mergedList);
-      try {
-        localStorage.setItem("bpjs_claims_store", JSON.stringify(mergedList));
-      } catch (e) {}
-
       if (mergedList.length > 0) {
-        const currentId = localStorage.getItem("bpjs_active_claim_id") || activeClaimId;
-        const found = mergedList.find((c: Claim) => c.id === currentId) || mergedList[0];
-        setActiveClaim(found);
-        setActiveClaimId(found.id);
-        localStorage.setItem("bpjs_active_claim_id", found.id);
-        try { localStorage.setItem("bpjs_active_claim", JSON.stringify(found)); } catch {}
+        setClaims(mergedList);
+        if (!activeClaim) {
+          setActiveClaim(mergedList[0]);
+          setActiveClaimId(mergedList[0].id);
+          try {
+            localStorage.setItem("bpjs_active_claim_id", mergedList[0].id);
+            localStorage.setItem("bpjs_active_claim", JSON.stringify(mergedList[0]));
+          } catch (e) {}
+        }
       }
     } catch (e) {
-      console.error("Failed to fetch claims in ClaimContext:", e);
+      console.warn("Using local persistent claims store:", e);
     }
   };
 

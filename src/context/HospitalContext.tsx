@@ -110,13 +110,20 @@ export const HospitalProvider: React.FC<{ children: ReactNode }> = ({ children }
   const fetchContext = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/hospitals");
-      const data = await res.json();
-      if (data.hospitals && data.hospitals.length > 0) {
-        setHospitals(data.hospitals);
+      const res = await fetch("/api/admin/hospitals", {
+        headers: { "X-User-Id": currentUser?.userId || "usr-admin-001" }
+      });
+      if (res.ok) {
+        const text = await res.text();
+        if (text && !text.startsWith("<") && !text.startsWith("A server error")) {
+          const data = JSON.parse(text);
+          if (data.hospitals && data.hospitals.length > 0) {
+            setHospitals(data.hospitals);
+          }
+        }
       }
     } catch (e) {
-      console.error("Failed to fetch organizational context:", e);
+      console.warn("Using default hospital list:", e);
     } finally {
       setLoading(false);
     }

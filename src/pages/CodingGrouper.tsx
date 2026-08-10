@@ -80,8 +80,16 @@ export default function CodingGrouper() {
       }
 
       const res = await fetch("/api/claims?dataMode=ALL", { headers })
-      const data = await res.json()
-      let claimList: Claim[] = Array.isArray(data) ? data : (data.claims || [])
+      let claimList: Claim[] = []
+      if (res.ok) {
+        const text = await res.text()
+        if (text && !text.startsWith("<") && !text.startsWith("A server error")) {
+          try {
+            const data = JSON.parse(text)
+            claimList = Array.isArray(data) ? data : (data.claims || [])
+          } catch (e) {}
+        }
+      }
 
       let localStore: Claim[] = []
       try {
