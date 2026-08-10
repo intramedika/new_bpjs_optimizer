@@ -3,7 +3,7 @@ import { aiManager } from "../ai/AIManager";
 
 export const aiRoutes = Router();
 
-aiRoutes.get("/api/ai/health", async (req, res) => {
+aiRoutes.get(["/api/ai/health", "/ai/health"], async (req, res) => {
   try {
     const health = await aiManager.getHealth();
     res.json(health);
@@ -20,7 +20,7 @@ aiRoutes.get("/api/ai/health", async (req, res) => {
   }
 });
 
-aiRoutes.get("/api/ai/models", async (req, res) => {
+aiRoutes.get(["/api/ai/models", "/ai/models"], async (req, res) => {
   try {
     const health = await aiManager.getHealth();
     res.json({
@@ -38,7 +38,7 @@ aiRoutes.get("/api/ai/models", async (req, res) => {
   }
 });
 
-aiRoutes.post("/api/ai/extract", async (req, res) => {
+aiRoutes.post(["/api/ai/extract", "/ai/extract"], async (req, res) => {
   try {
     const { text, filename, mimeType, hash } = req.body || {};
     if (!text && !filename) {
