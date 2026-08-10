@@ -50242,14 +50242,14 @@ __export(api_entry_exports, {
   default: () => api_entry_default
 });
 module.exports = __toCommonJS(api_entry_exports);
-var import_express16 = __toESM(require_express2(), 1);
+var import_express16 = __toESM(require_express2());
 
 // server/routes/integration.ts
-var import_express = __toESM(require_express2(), 1);
+var import_express = __toESM(require_express2());
 
 // server/db/Database.ts
-var import_path = __toESM(require("path"), 1);
-var import_fs = __toESM(require("fs"), 1);
+var import_path = __toESM(require("path"));
+var import_fs = __toESM(require("fs"));
 var import_module = require("module");
 var import_meta = {};
 var isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
@@ -51090,7 +51090,7 @@ var IntegrationJobQueueRepository = class {
 var integrationJobQueueRepository = new IntegrationJobQueueRepository();
 
 // server/integration/IntegrationHub.ts
-var import_crypto = __toESM(require("crypto"), 1);
+var import_crypto = __toESM(require("crypto"));
 var IntegrationHub = class {
   constructor() {
     this.idempotencyCache = /* @__PURE__ */ new Map();
@@ -52371,11 +52371,11 @@ integrationRoutes.post("/api/simrs/sync", authenticateRequest, requirePermission
 });
 
 // server/routes/health.ts
-var import_express2 = __toESM(require_express2(), 1);
+var import_express2 = __toESM(require_express2());
 
 // server/db/providers/SQLiteProvider.ts
-var import_path2 = __toESM(require("path"), 1);
-var import_fs2 = __toESM(require("fs"), 1);
+var import_path2 = __toESM(require("path"));
+var import_fs2 = __toESM(require("fs"));
 var import_module2 = require("module");
 var import_meta2 = {};
 var SQLiteProvider = class {
@@ -53207,7 +53207,7 @@ var OracleProvider = class {
 var oracleProvider = new OracleProvider();
 
 // server/db/SecretManager.ts
-var import_crypto2 = __toESM(require("crypto"), 1);
+var import_crypto2 = __toESM(require("crypto"));
 var ALGORITHM = "aes-256-gcm";
 var MASTER_KEY_STRING = process.env.DB_ENCRYPTION_KEY || process.env.SERVER_SECRET || "bpjs-optimizer-enterprise-master-key-2026-secure-salt";
 var KEY = import_crypto2.default.scryptSync(MASTER_KEY_STRING, "bpjs-optimizer-salt", 32);
@@ -53570,7 +53570,7 @@ healthRoutes.get(["/api/health/status", "/health/status"], async (req, res) => {
 });
 
 // server/routes/local.ts
-var import_express3 = __toESM(require_express2(), 1);
+var import_express3 = __toESM(require_express2());
 
 // server/engines/SyncEngine.ts
 var SyncEngine = class {
@@ -53813,7 +53813,7 @@ localRoutes.get("/api/local/health", async (req, res) => {
 });
 
 // server/routes/stats.ts
-var import_express4 = __toESM(require_express2(), 1);
+var import_express4 = __toESM(require_express2());
 var statsRoutes = (0, import_express4.Router)();
 statsRoutes.get(["/api/stats", "/stats"], async (req, res) => {
   try {
@@ -53849,7 +53849,7 @@ statsRoutes.get(["/api/stats", "/stats"], async (req, res) => {
 });
 
 // server/routes/import.ts
-var import_express5 = __toESM(require_express2(), 1);
+var import_express5 = __toESM(require_express2());
 var importRoutes = (0, import_express5.Router)();
 importRoutes.post("/api/import/e-klaim/parse", async (req, res) => {
   try {
@@ -54093,7 +54093,7 @@ function buildClaimObject(raw) {
 }
 
 // server/routes/documents.ts
-var import_express6 = __toESM(require_express2(), 1);
+var import_express6 = __toESM(require_express2());
 
 // node_modules/@google/genai/dist/node/index.mjs
 var import_p_retry = __toESM(require_p_retry(), 1);
@@ -76892,7 +76892,7 @@ function generateLocalExtraction(filename) {
 }
 
 // server/routes/testCenter.ts
-var import_express7 = __toESM(require_express2(), 1);
+var import_express7 = __toESM(require_express2());
 
 // server/engines/ValidationEngine.ts
 var ValidationEngine = class {
@@ -77455,7 +77455,7 @@ var ReadinessEngine = class {
 var readinessEngine = new ReadinessEngine();
 
 // server/routes/testCenter.ts
-var import_crypto3 = __toESM(require("crypto"), 1);
+var import_crypto3 = __toESM(require("crypto"));
 var testCenterRoutes = (0, import_express7.Router)();
 testCenterRoutes.get("/api/test-center/run-all", async (req, res) => {
   const results = [];
@@ -77705,7 +77705,7 @@ testCenterRoutes.get("/api/test-center/run-all", async (req, res) => {
 });
 
 // server/routes/demoRoutes.ts
-var import_express8 = __toESM(require_express2(), 1);
+var import_express8 = __toESM(require_express2());
 
 // server/data/seed.ts
 var indonesianNames = [
@@ -77858,7 +77858,7 @@ demoRoutes.delete("/api/test/clear", async (req, res) => {
 });
 
 // server/routes/clinicalRoutes.ts
-var import_express9 = __toESM(require_express2(), 1);
+var import_express9 = __toESM(require_express2());
 
 // server/repositories/ClinicalFindingRepository.ts
 var ClinicalFindingRepository = class {
@@ -78210,7 +78210,7 @@ clinicalRoutes.put("/api/clinical/findings/:id/status", async (req, res) => {
 });
 
 // server/routes/reconciliationRoutes.ts
-var import_express10 = __toESM(require_express2(), 1);
+var import_express10 = __toESM(require_express2());
 
 // server/repositories/ReconciliationRepository.ts
 var ReconciliationRepository = class {
@@ -78395,7 +78395,7 @@ reconciliationRoutes.get("/api/reconciliation/stats", async (req, res) => {
 });
 
 // server/routes/settingsRoutes.ts
-var import_express11 = __toESM(require_express2(), 1);
+var import_express11 = __toESM(require_express2());
 
 // server/repositories/SettingsRepository.ts
 var SettingsRepository = class {
@@ -78611,7 +78611,7 @@ settingsRoutes.post("/api/settings/storage/save", async (req, res) => {
 });
 
 // server/routes/adminRoutes.ts
-var import_express12 = __toESM(require_express2(), 1);
+var import_express12 = __toESM(require_express2());
 var adminRoutes = (0, import_express12.Router)();
 var ensureSeedData = () => {
   try {
@@ -78776,7 +78776,7 @@ adminRoutes.post("/api/admin/purge-data", async (req, res) => {
 });
 
 // server/routes/adminDatabaseRoutes.ts
-var import_express13 = __toESM(require_express2(), 1);
+var import_express13 = __toESM(require_express2());
 var adminDatabaseRoutes = (0, import_express13.Router)();
 adminDatabaseRoutes.get("/api/admin/database/config", authenticateRequest, requirePermission("SYSTEM.CONFIGURE" /* SYSTEM_CONFIGURE */), (req, res) => {
   const active = databaseConfigRepository.getMaskedActiveConfig();
@@ -78940,7 +78940,7 @@ adminDatabaseRoutes.post("/api/admin/database/rotate-credentials", authenticateR
 });
 
 // server/routes/revenueRoutes.ts
-var import_express14 = __toESM(require_express2(), 1);
+var import_express14 = __toESM(require_express2());
 
 // server/repositories/RevenueOpportunityRepository.ts
 var RevenueOpportunityRepository = class {
@@ -79482,7 +79482,7 @@ router.get("/revenue/analytics", authenticateRequest, requirePermission("REVENUE
 var revenueRoutes_default = router;
 
 // server/routes/codingRoutes.ts
-var import_express15 = __toESM(require_express2(), 1);
+var import_express15 = __toESM(require_express2());
 var router2 = (0, import_express15.Router)();
 router2.get("/claims/:claimId/coding-candidates", authenticateRequest, requirePermission("CODING.READ" /* CODING_READ */), async (req, res) => {
   const principal = req.principal || resolvePrincipalFromRequest(req);
@@ -80371,7 +80371,7 @@ var MockEKlaimAdapter = class extends BaseAdapter {
 };
 
 // server/integration/adapters/MockVClaimAdapter.ts
-var import_crypto4 = __toESM(require("crypto"), 1);
+var import_crypto4 = __toESM(require("crypto"));
 var MockVClaimAdapter = class extends BaseAdapter {
   constructor() {
     super(...arguments);
