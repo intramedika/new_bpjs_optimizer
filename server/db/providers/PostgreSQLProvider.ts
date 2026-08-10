@@ -1,7 +1,7 @@
 import pg from "pg";
 import { DatabaseProviderAdapter, DatabaseCapabilities, DatabaseMetadata, QueryResult } from "../DatabaseProvider";
 
-const { Pool } = pg;
+const Pool = pg?.Pool || (pg as any)?.default?.Pool || (pg as any);
 
 export interface PostgreSQLConfig {
   connectionString?: string;
