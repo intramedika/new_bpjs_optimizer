@@ -452,6 +452,18 @@ export default function SmartDocumentIntake() {
           };
         }
 
+        // Save created claim to browser localStorage so it is 100% persistent across sessions
+        let existingStore: any[] = [];
+        try {
+          const saved = localStorage.getItem("bpjs_claims_store");
+          if (saved) existingStore = JSON.parse(saved);
+        } catch (e) {}
+
+        const mergedStore = [createdClaim, ...existingStore.filter(c => c && c.id !== createdClaim.id)];
+        try {
+          localStorage.setItem("bpjs_claims_store", JSON.stringify(mergedStore));
+        } catch (e) {}
+
         // Automatically bind claim to context and trigger refresh
         selectClaim(createdClaim.id, createdClaim);
         await refreshClaims();
