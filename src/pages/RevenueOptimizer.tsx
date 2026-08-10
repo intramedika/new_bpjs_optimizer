@@ -36,7 +36,17 @@ export default function RevenueOptimizer() {
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (activeClaim) {
+    if (!activeClaim) {
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store");
+        if (saved) {
+          const list = JSON.parse(saved);
+          if (Array.isArray(list) && list.length > 0) {
+            selectClaim(list[0].id, list[0]);
+          }
+        }
+      } catch (e) {}
+    } else {
       fetchOpportunities(activeClaim.id);
     }
   }, [activeClaim]);

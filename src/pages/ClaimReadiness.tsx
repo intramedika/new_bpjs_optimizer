@@ -40,17 +40,45 @@ export default function ClaimReadiness() {
   const fetchClaims = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/claims?dataMode=ALL")
+      const headers = {
+        "Content-Type": "application/json",
+        "X-User-Id": "usr-admin-001"
+      }
+      const res = await fetch("/api/claims?dataMode=ALL", { headers })
       const data = await res.json()
-      const claimList: Claim[] = Array.isArray(data) ? data : (data.claims || [])
-      setClaims(claimList)
-      if (claimList.length > 0) {
+      let claimList: Claim[] = Array.isArray(data) ? data : (data.claims || [])
+
+      let localStore: Claim[] = []
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store")
+        if (saved) localStore = JSON.parse(saved)
+      } catch (e) {}
+
+      const mergedList = [...claimList]
+      localStore.forEach(c => {
+        if (c && c.id && !mergedList.some(m => m.id === c.id)) {
+          mergedList.unshift(c)
+        }
+      })
+
+      setClaims(mergedList)
+      if (mergedList.length > 0) {
         const targetId = urlClaimId || activeClaimId
-        const found = claimList.find((c: Claim) => c.id === targetId) || claimList[0]
+        const found = mergedList.find((c: Claim) => c.id === targetId) || mergedList[0]
         selectClaim(found.id, found)
       }
     } catch (e) {
       console.error("Failed to fetch claims:", e)
+      let localStore: Claim[] = []
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store")
+        if (saved) localStore = JSON.parse(saved)
+      } catch (err) {}
+
+      if (localStore.length > 0) {
+        setClaims(localStore)
+        selectClaim(localStore[0].id, localStore[0])
+      }
     } finally {
       setLoading(false)
     }

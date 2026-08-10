@@ -81,12 +81,29 @@ export default function CodingGrouper() {
 
       const res = await fetch("/api/claims?dataMode=ALL", { headers })
       const data = await res.json()
-      const claimList: Claim[] = Array.isArray(data) ? data : (data.claims || [])
-      setClaims(claimList)
+      let claimList: Claim[] = Array.isArray(data) ? data : (data.claims || [])
 
-      const targetId = urlClaimId || activeClaimId
+      let localStore: Claim[] = []
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store")
+        if (saved) localStore = JSON.parse(saved)
+      } catch (e) {}
+
+      const mergedList = [...claimList]
+      localStore.forEach(c => {
+        if (c && c.id && !mergedList.some(m => m.id === c.id)) {
+          mergedList.unshift(c)
+        }
+      })
+      if (activeClaim && activeClaim.id && !mergedList.some(m => m.id === activeClaim.id)) {
+        mergedList.unshift(activeClaim)
+      }
+
+      setClaims(mergedList)
+
+      const targetId = urlClaimId || activeClaimId || (mergedList.length > 0 ? mergedList[0].id : null)
       if (targetId) {
-        let found = claimList.find((c: Claim) => c.id === targetId)
+        let found = mergedList.find((c: Claim) => c.id === targetId)
         if (!found) {
           try {
             const singleRes = await fetch(`/api/claims/${targetId}`, { headers })
@@ -103,12 +120,22 @@ export default function CodingGrouper() {
         }
 
         if (found) selectClaim(found.id, found)
-        else if (claimList.length > 0) selectClaim(claimList[0].id, claimList[0])
-      } else if (claimList.length > 0) {
-        selectClaim(claimList[0].id, claimList[0])
+        else if (mergedList.length > 0) selectClaim(mergedList[0].id, mergedList[0])
+      } else if (mergedList.length > 0) {
+        selectClaim(mergedList[0].id, mergedList[0])
       }
     } catch (e) {
       console.error("Failed to fetch claims:", e)
+      let localStore: Claim[] = []
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store")
+        if (saved) localStore = JSON.parse(saved)
+      } catch (err) {}
+
+      if (localStore.length > 0) {
+        setClaims(localStore)
+        selectClaim(localStore[0].id, localStore[0])
+      }
     } finally {
       setLoading(false)
     }

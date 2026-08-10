@@ -25,14 +25,41 @@ export default function Reconciliation() {
 
   const fetchClaims = async () => {
     try {
-      const res = await fetch("/api/claims?dataMode=ALL")
+      const res = await fetch("/api/claims?dataMode=ALL", {
+        headers: { "X-User-Id": "usr-admin-001" }
+      })
       const data = await res.json()
-      if (data.claims && data.claims.length > 0) {
-        setClaims(data.claims)
-        setSelectedClaimId(data.claims[0].id)
+      let claimList: Claim[] = Array.isArray(data) ? data : (data.claims || [])
+
+      let localStore: Claim[] = []
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store")
+        if (saved) localStore = JSON.parse(saved)
+      } catch (e) {}
+
+      const mergedList = [...claimList]
+      localStore.forEach(c => {
+        if (c && c.id && !mergedList.some(m => m.id === c.id)) {
+          mergedList.unshift(c)
+        }
+      })
+
+      if (mergedList.length > 0) {
+        setClaims(mergedList)
+        setSelectedClaimId(mergedList[0].id)
       }
     } catch (e) {
       console.error("Failed to fetch claims:", e)
+      let localStore: Claim[] = []
+      try {
+        const saved = localStorage.getItem("bpjs_claims_store")
+        if (saved) localStore = JSON.parse(saved)
+      } catch (err) {}
+
+      if (localStore.length > 0) {
+        setClaims(localStore)
+        setSelectedClaimId(localStore[0].id)
+      }
     }
   }
 
