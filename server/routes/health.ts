@@ -1,27 +1,34 @@
 import { Router } from "express";
-import { documentRepository } from "../repositories/DocumentRepository";
+import { databaseProviderManager } from "../db/DatabaseProviderManager";
 
 export const healthRoutes = Router();
 
-healthRoutes.get("/api/health/status", async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+healthRoutes.get(["/api/health/status", "/health/status"], async (req, res) => {
+  const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const requestId = `req-health-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   
-  // Test if we can read DB
-  let dbStatus = "NOT CONFIGURED";
+  let dbCheck: { status: string; latencyMs: number; error?: string } = { status: "FAILED", latencyMs: 0 };
   try {
-    const test = await documentRepository.findAll();
-    dbStatus = "REAL";
-  } catch (err) {
-    dbStatus = "FAILED";
+    const adapter = databaseProviderManager.getAdapter();
+    dbCheck = await adapter.healthCheck();
+  } catch (err: any) {
+    dbCheck = { status: "FAILED", latencyMs: 0, error: err.message };
   }
 
-  res.json({
-    database: dbStatus,
-    ocrProvider: apiKey ? "REAL" : "NOT CONFIGURED",
-    aiProvider: apiKey ? "REAL" : "NOT CONFIGURED",
-    simrsConnector: "CONFIGURED", // User can test it, but it relies on input URL for now
-    eKlaim: "NOT CONFIGURED",
-    vClaim: "NOT CONFIGURED",
-    diva: "NOT CONFIGURED"
+  const isHealthy = dbCheck.status === "CONNECTED";
+  const statusCode = isHealthy ? 200 : 503;
+
+  res.setHeader("Content-Type", "application/json");
+  return res.status(statusCode).json({
+    success: isHealthy,
+    status: isHealthy ? "healthy" : "degraded",
+    runtime: isVercel ? "vercel" : "local_node",
+    database: {
+      provider: databaseProviderManager.getAdapter().providerType === "postgresql" ? "neon" : "sqlite",
+      status: isHealthy ? "connected" : "unavailable",
+      latencyMs: dbCheck.latencyMs
+    },
+    version: "1.0.0",
+    requestId
   });
 });

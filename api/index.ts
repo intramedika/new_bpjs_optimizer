@@ -136,11 +136,19 @@ app.post("/api/claims/:id/grouper", requirePermission(Permission.GROUPER_EXECUTE
   }
 });
 
-// Global Error Catch Middleware to prevent HTTP 500 HTML responses on Vercel
+// Global Error Catch Middleware to enforce JSON Error Contract
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("[Express Serverless Error]:", err);
+  const requestId = `req-err-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   res.setHeader("Content-Type", "application/json");
-  res.status(200).json({ status: "success", claims: [], count: 0, findings: [], records: [], message: "Processed with fallback handling." });
+  res.status(500).json({
+    success: false,
+    error: {
+      code: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected server error occurred.",
+      requestId
+    }
+  });
 });
 
 export default app;

@@ -89,6 +89,8 @@ export class PostgreSQLProvider implements DatabaseProviderAdapter {
 
     // Replace SQLite specific INSERT OR IGNORE with PostgreSQL ON CONFLICT DO NOTHING
     pgSql = pgSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/gi, "INSERT INTO");
+    pgSql = pgSql.replace(/ORDER BY rowid DESC/gi, "ORDER BY createdAt DESC");
+    pgSql = pgSql.replace(/ORDER BY rowid ASC/gi, "ORDER BY createdAt ASC");
 
     const res = await this.pool!.query(pgSql, params);
     return {

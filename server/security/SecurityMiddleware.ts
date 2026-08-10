@@ -29,7 +29,14 @@ export function authenticateRequest(req: Request, res: Response, next: NextFunct
       result: 'DENY',
       reason: `User ${principal.userId} attempted cross-tenant access to ${requestedTenant}`
     });
-    return res.status(403).json({ error: "Access Denied: Cross-tenant access is prohibited." });
+    return res.status(403).json({
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Access Denied: Cross-tenant access is prohibited.",
+        requestId: `req-auth-${Date.now()}`
+      }
+    });
   }
 
   if (requestedHospital && requestedHospital !== principal.hospitalId && 
@@ -45,7 +52,14 @@ export function authenticateRequest(req: Request, res: Response, next: NextFunct
       result: 'DENY',
       reason: `User ${principal.userId} attempted cross-hospital access to ${requestedHospital}`
     });
-    return res.status(403).json({ error: "Access Denied: Cross-hospital access is prohibited." });
+    return res.status(403).json({
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Access Denied: Cross-hospital access is prohibited.",
+        requestId: `req-auth-${Date.now()}`
+      }
+    });
   }
 
   next();
@@ -55,7 +69,18 @@ export function requirePermission(permission: Permission) {
   return (req: Request, res: Response, next: NextFunction) => {
     const principal = (req as any).principal || resolvePrincipalFromRequest(req);
 
-    if (!principal || !hasPermission(principal.role, permission)) {
+    if (!principal) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "UNAUTHENTICATED",
+          message: "Authentication required.",
+          requestId: `req-auth-${Date.now()}`
+        }
+      });
+    }
+
+    if (!hasPermission(principal.role, permission)) {
       auditLogger.log({
         actorUserId: principal?.userId || 'anonymous',
         actorRole: principal?.role || 'UNKNOWN',
@@ -69,9 +94,12 @@ export function requirePermission(permission: Permission) {
       });
 
       return res.status(403).json({ 
-        error: "Forbidden", 
-        message: `Role ${principal?.role} is not authorized to perform action requiring ${permission}.`,
-        permission
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: `Role ${principal?.role} is not authorized to perform action requiring ${permission}.`,
+          requestId: `req-auth-${Date.now()}`
+        }
       });
     }
 
