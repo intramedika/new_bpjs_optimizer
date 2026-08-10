@@ -36,13 +36,14 @@ export class IntegrationHub implements IIntegrationHub {
     // Load config to check environment
     let config = await integrationConfigRepository.findByAdapter(adapterId, tenantId, hospitalId);
     
-    // Auto-map mock environment if requested or configured
-    if ((config && config.environment === "MOCK") || adapterId.startsWith("mock-")) {
+    // Auto-map mock environment if requested or unconfigured (default to MOCK for safety)
+    if (!config || config.environment === "MOCK" || adapterId.startsWith("mock-")) {
       if (adapterId === "eklaim") targetAdapterId = "mock-eklaim";
       if (adapterId === "vclaim") targetAdapterId = "mock-vclaim";
+      if (adapterId === "simrs") targetAdapterId = "mock-simrs";
     }
 
-    const adapter = integrationRegistry.getAdapter(targetAdapterId);
+    const adapter = integrationRegistry.getAdapter(targetAdapterId) || integrationRegistry.getAdapter(adapterId);
     if (!adapter) {
       return this.buildHubError(adapterId, "testConnection", "UNSUPPORTED_OPERATION", `Adapter '${targetAdapterId}' is not registered.`, 0);
     }
@@ -53,14 +54,14 @@ export class IntegrationHub implements IIntegrationHub {
     }
 
     // Create fallback mock config if not stored
-    if (!config && targetAdapterId.startsWith("mock-")) {
+    if (!config || config.environment === "MOCK" || targetAdapterId.startsWith("mock-")) {
       config = {
         id: `ICFG-MOCK-${targetAdapterId}`,
         tenantId,
         hospitalId,
         adapterId: targetAdapterId,
         environment: "MOCK",
-        baseUrl: "https://mock.sandbox.local",
+        baseUrl: `https://mock.${targetAdapterId}.sandbox.local`,
         credentials: { mockSecret: "MOCK_SECRET_KEY" },
         status: "MOCK_CONNECTED",
         createdAt: new Date().toISOString(),

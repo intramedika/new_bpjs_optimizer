@@ -80,9 +80,9 @@ integrationRoutes.post("/api/integration/test", authenticateRequest, requirePerm
     }
 
     const result = await integrationHub.testConnection(adapterId, principal.tenantId, principal.hospitalId);
-    res.status(result.success ? 200 : 400).json(result);
+    res.json(result);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ status: "ERROR", success: false, message: error.message });
   }
 });
 
