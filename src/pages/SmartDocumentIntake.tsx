@@ -136,13 +136,16 @@ async function generateClientExtraction(filename: string, file?: File) {
   // Dynamic zero-hardcode fallback generated from filename/SEP
   if (!sepNumber) sepNumber = `0801R001${Date.now().toString().slice(-10)}`;
   if (!mrNumber) mrNumber = `RM-${sepNumber.slice(-6)}`;
-  if (!patientName) {
+  let finalName: string | null = patientName || null;
+  if (!finalName) {
     const clean = filename.replace(/\.pdf$/i, "").replace(/[-_]/g, " ").replace(/\d+/g, "").trim();
-    patientName = clean.length > 2 ? clean.toUpperCase() : `PASIEN ${mrNumber}`;
+    if (clean.length > 2 && !clean.toUpperCase().startsWith("0801R") && !clean.toUpperCase().startsWith("DOC")) {
+      finalName = clean.toUpperCase();
+    }
   }
 
   return {
-    patientName,
+    patientName: finalName,
     mrNumber,
     sepNumber,
     hospitalName,
@@ -157,7 +160,7 @@ async function generateClientExtraction(filename: string, file?: File) {
         sourceSection: "ASSESSMENT",
         diagnosisStage: "FINAL",
         evidenceType: "EXPLICIT_DIAGNOSIS",
-        sourceText: `DIAGNOSIS : Chirrosis hepatis - ${patientName}`
+        sourceText: `DIAGNOSIS : Chirrosis hepatis - ${finalName || "Unverified"}`
       },
       { 
         text: "Ascites",
@@ -664,7 +667,12 @@ export default function SmartDocumentIntake() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-950/60 border border-emerald-800 text-xs">
                   <div>
                     <span className="text-[9px] uppercase font-bold text-emerald-400 block">Patient</span>
-                    <strong className="text-white text-sm block truncate">{documents[selectedDocIndex].extraction?.patientName || "JOKO TRIYONO"}</strong>
+                    <strong className={cn(
+                      "text-sm block truncate",
+                      documents[selectedDocIndex].extraction?.patientName ? "text-white" : "text-amber-300 italic text-xs"
+                    )}>
+                      {documents[selectedDocIndex].extraction?.patientName || "Nama pasien belum terverifikasi"}
+                    </strong>
                   </div>
                   <div>
                     <span className="text-[9px] uppercase font-bold text-emerald-400 block">MRN / No. RM</span>

@@ -115,6 +115,45 @@ async function runTests() {
     failed++;
   }
 
+  // TEST 7: Universal Label Extractor (Generic Identities)
+  try {
+    const docAData = Buffer.from("Nama Peserta : PATIENT ALPHA\nRM : RM-111111").toString("base64");
+    const metaAlpha = extractPdfMetadata("0801R0019999V000001.pdf", docAData);
+    assert.strictEqual(metaAlpha.patientName, "PATIENT ALPHA");
+    assert.strictEqual(metaAlpha.mrNumber, "RM-111111");
+
+    const docBData = Buffer.from("Nama Pasien : PATIENT BETA\nNo. RM : RM-222222").toString("base64");
+    const metaBeta = extractPdfMetadata("0801R0019999V000002.pdf", docBData);
+    assert.strictEqual(metaBeta.patientName, "PATIENT BETA");
+    assert.strictEqual(metaBeta.mrNumber, "RM-222222");
+
+    const docCData = Buffer.from("Patient Name : PATIENT GAMMA\nMRN : RM-333333").toString("base64");
+    const metaGamma = extractPdfMetadata("0801R0019999V000003.pdf", docCData);
+    assert.strictEqual(metaGamma.patientName, "PATIENT GAMMA");
+    assert.strictEqual(metaGamma.mrNumber, "RM-333333");
+
+    console.log("✅ TEST 7 PASSED: Universal label extractor dynamically parses PATIENT ALPHA, BETA, GAMMA.");
+    passed++;
+  } catch (err: any) {
+    console.error("❌ TEST 7 FAILED:", err.message);
+    failed++;
+  }
+
+  // TEST 8: Negative Test - MRN without Patient Name returns patientName === null
+  try {
+    const docOnlyMrn = Buffer.from("Nomor RM : RM-295500\nTanggal : 2026-08-01").toString("base64");
+    const metaOnlyMrn = extractPdfMetadata("0801R0010925V001329.pdf", docOnlyMrn);
+
+    assert.strictEqual(metaOnlyMrn.mrNumber, "RM-295500");
+    assert.strictEqual(metaOnlyMrn.patientName, null);
+    assert.notStrictEqual(metaOnlyMrn.patientName, "PASIEN RM-295500");
+    console.log("✅ TEST 8 PASSED: Negative test verified! Document with only MRN yields patientName = null (NOT 'PASIEN RM-295500').");
+    passed++;
+  } catch (err: any) {
+    console.error("❌ TEST 8 FAILED:", err.message);
+    failed++;
+  }
+
   console.log("\n=================================================");
   console.log(`TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log("=================================================");

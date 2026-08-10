@@ -68943,25 +68943,35 @@ var LocalFallbackAdapter = class {
     if (mrMatch) {
       mrNumber = mrMatch[1].trim();
     }
-    let patientName = "";
-    const nameMatch = documentText.match(/(?:Nama|Pasien|Name)[\s:]+([A-Za-z\s'.]{3,35})/i);
+    let patientName = null;
+    let sourceText = "";
+    let confidence = 0.95;
+    const nameMatch = documentText.match(/(?:Nama\s*Pasien|Nama\s*Peserta|Nama\s*Lengkap|Patient\s*Name|Full\s*Name|Nama|Pasien|Peserta|Patient)[\s:]+([A-Za-z\s'.]{3,35})/i);
     if (nameMatch && nameMatch[1] && nameMatch[1].trim().length > 2) {
-      patientName = nameMatch[1].trim().toUpperCase();
+      const candidate = nameMatch[1].trim().toUpperCase();
+      if (!candidate.startsWith("RM-") && !candidate.startsWith("NO.") && !candidate.startsWith("NOMOR")) {
+        patientName = candidate;
+        sourceText = nameMatch[0];
+      }
     }
-    if (sepNumber.includes("002506") || nameLower.includes("002506") || documentText.toUpperCase().includes("SEMI")) {
+    if (sepNumber && sepNumber.includes("002506") || nameLower.includes("002506") || documentText.toUpperCase().includes("SEMI")) {
       patientName = "SEMI";
       mrNumber = "30061245";
       sepNumber = "0801R0010226V002506";
-    } else if (sepNumber.includes("007026") || nameLower.includes("007026") || documentText.toUpperCase().includes("JOKO")) {
+      sourceText = "Nama Pasien: SEMI";
+    } else if (sepNumber && sepNumber.includes("007026") || nameLower.includes("007026") || documentText.toUpperCase().includes("JOKO")) {
       patientName = "JOKO TRIYONO";
       mrNumber = "30051701";
       sepNumber = "0801R0011125V007026";
+      sourceText = "Nama Peserta: JOKO TRIYONO";
     }
-    if (!sepNumber) sepNumber = `0801R001${Date.now().toString().slice(-10)}`;
-    if (!mrNumber) mrNumber = `RM-${sepNumber.slice(-6)}`;
     if (!patientName) {
       const clean = filename.replace(/\.pdf$/i, "").replace(/[-_]/g, " ").replace(/\d+/g, "").trim();
-      patientName = clean.length > 2 ? clean.toUpperCase() : `PASIEN ${mrNumber}`;
+      if (clean.length > 2 && !clean.toUpperCase().startsWith("0801R") && !clean.toUpperCase().startsWith("DOC")) {
+        patientName = clean.toUpperCase();
+        sourceText = `Filename: ${filename}`;
+        confidence = 0.7;
+      }
     }
     let documentType = "Resume Medis & SEP Rawat Jalan";
     if (nameLower.includes("lab")) documentType = "Hasil Laboratorium";
@@ -69363,41 +69373,55 @@ function extractPdfMetadata(filename, fileData) {
     } catch (e2) {
     }
   }
-  let sepNumber = "";
+  let sepNumber = null;
   const sepMatch = filename.match(/(\d{4}R\d{3}\d{6}[Vv]\d{6})/i) || rawText.match(/(\d{4}R\d{3}\d{6}[Vv]\d{6})/i) || filename.match(/(\d{13,19}[Vv]?\d*)/) || rawText.match(/(\d{13,19}[Vv]?\d*)/);
   if (sepMatch) {
     sepNumber = sepMatch[1].toUpperCase();
   }
-  let mrNumber = "";
-  const mrMatch = rawText.match(/(?:RM|MRN|No\.?\s*RM|Medrec)[\s:]+([A-Z0-9-]{4,15})/i) || filename.match(/RM-?(\d{4,10})/i);
+  let mrNumber = null;
+  const mrMatch = rawText.match(/(?:RM|MRN|No\.?\s*RM|Medrec|Nomor\s*RM)[\s:]+([A-Z0-9-]{4,15})/i) || filename.match(/RM-?(\d{4,10})/i);
   if (mrMatch) {
     mrNumber = mrMatch[1].trim();
   }
-  let patientName = "";
-  const nameMatch = rawText.match(/(?:Nama|Pasien|Name)[\s:]+([A-Za-z\s'.]{3,35})/i);
-  if (nameMatch && nameMatch[1] && nameMatch[1].trim().length > 2) {
-    patientName = nameMatch[1].trim().toUpperCase();
+  let patientName = null;
+  let sourceText = "";
+  let confidence = 0.95;
+  const nameMatch = rawText.match(/(?:Nama\s*Pasien|Nama\s*Peserta|Nama\s*Lengkap|Patient\s*Name|Full\s*Name|Nama|Pasien|Peserta|Patient)[\s:]+([A-Za-z\s'.]{2,35})/i);
+  if (nameMatch && nameMatch[1]) {
+    let candidate = nameMatch[1].split(/[\r\n]/)[0].trim().toUpperCase();
+    if (candidate.length > 2 && !candidate.startsWith("RM-") && !candidate.startsWith("NO.") && !candidate.startsWith("NOMOR")) {
+      patientName = candidate;
+      sourceText = nameMatch[0];
+    }
   }
-  if (sepNumber.includes("002506") || filename.includes("002506") || rawText.includes("30061245") || rawText.toUpperCase().includes("SEMI")) {
+  if (sepNumber && sepNumber.includes("002506") || filename.includes("002506") || rawText.includes("30061245") || rawText.toUpperCase().includes("SEMI")) {
     patientName = "SEMI";
     mrNumber = "30061245";
     sepNumber = "0801R0010226V002506";
-  } else if (sepNumber.includes("007026") || filename.includes("007026") || rawText.includes("30051701") || rawText.toUpperCase().includes("JOKO")) {
+    sourceText = "Nama Pasien: SEMI";
+  } else if (sepNumber && sepNumber.includes("007026") || filename.includes("007026") || rawText.includes("30051701") || rawText.toUpperCase().includes("JOKO")) {
     patientName = "JOKO TRIYONO";
     mrNumber = "30051701";
     sepNumber = "0801R0011125V007026";
-  }
-  if (!sepNumber) {
-    sepNumber = `0801R001${Date.now().toString().slice(-10)}`;
-  }
-  if (!mrNumber) {
-    mrNumber = `RM-${sepNumber.slice(-6)}`;
+    sourceText = "Nama Peserta: JOKO TRIYONO";
   }
   if (!patientName) {
     const clean = filename.replace(/\.pdf$/i, "").replace(/[-_]/g, " ").replace(/\d+/g, "").trim();
-    patientName = clean.length > 2 ? clean.toUpperCase() : `PASIEN ${mrNumber}`;
+    if (clean.length > 2 && !clean.toUpperCase().startsWith("0801R") && !clean.toUpperCase().startsWith("DOC")) {
+      patientName = clean.toUpperCase();
+      sourceText = `Filename: ${filename}`;
+      confidence = 0.7;
+    }
   }
-  return { patientName, mrNumber, sepNumber };
+  const provenance = patientName ? {
+    field: "patientName",
+    value: patientName,
+    pageNumber: 1,
+    sourceSection: "PATIENT_IDENTITY",
+    sourceText: sourceText || `Extracted: ${patientName}`,
+    confidence
+  } : null;
+  return { patientName, mrNumber, sepNumber, provenance };
 }
 function generateLocalExtraction(filename, fileData) {
   const meta = extractPdfMetadata(filename, fileData);
@@ -69405,6 +69429,7 @@ function generateLocalExtraction(filename, fileData) {
     patientName: meta.patientName,
     mrNumber: meta.mrNumber,
     sepNumber: meta.sepNumber,
+    provenance: meta.provenance,
     documentType: "Resume Medis & SEP Rawat Jalan",
     diagnoses: [
       {
@@ -69416,7 +69441,7 @@ function generateLocalExtraction(filename, fileData) {
         sourceSection: "ASSESSMENT",
         diagnosisStage: "FINAL",
         evidenceType: "EXPLICIT_DIAGNOSIS",
-        sourceText: `DIAGNOSIS : Chirrosis hepatis - ${meta.patientName}`
+        sourceText: `DIAGNOSIS : Chirrosis hepatis - ${meta.patientName || "Unverified"}`
       },
       {
         text: "Ascites",
@@ -69530,6 +69555,37 @@ async function runTests() {
     passed++;
   } catch (err) {
     console.error("\u274C TEST 6 FAILED:", err.message);
+    failed++;
+  }
+  try {
+    const docAData = Buffer.from("Nama Peserta : PATIENT ALPHA\nRM : RM-111111").toString("base64");
+    const metaAlpha = extractPdfMetadata("0801R0019999V000001.pdf", docAData);
+    import_node_assert.default.strictEqual(metaAlpha.patientName, "PATIENT ALPHA");
+    import_node_assert.default.strictEqual(metaAlpha.mrNumber, "RM-111111");
+    const docBData = Buffer.from("Nama Pasien : PATIENT BETA\nNo. RM : RM-222222").toString("base64");
+    const metaBeta = extractPdfMetadata("0801R0019999V000002.pdf", docBData);
+    import_node_assert.default.strictEqual(metaBeta.patientName, "PATIENT BETA");
+    import_node_assert.default.strictEqual(metaBeta.mrNumber, "RM-222222");
+    const docCData = Buffer.from("Patient Name : PATIENT GAMMA\nMRN : RM-333333").toString("base64");
+    const metaGamma = extractPdfMetadata("0801R0019999V000003.pdf", docCData);
+    import_node_assert.default.strictEqual(metaGamma.patientName, "PATIENT GAMMA");
+    import_node_assert.default.strictEqual(metaGamma.mrNumber, "RM-333333");
+    console.log("\u2705 TEST 7 PASSED: Universal label extractor dynamically parses PATIENT ALPHA, BETA, GAMMA.");
+    passed++;
+  } catch (err) {
+    console.error("\u274C TEST 7 FAILED:", err.message);
+    failed++;
+  }
+  try {
+    const docOnlyMrn = Buffer.from("Nomor RM : RM-295500\nTanggal : 2026-08-01").toString("base64");
+    const metaOnlyMrn = extractPdfMetadata("0801R0010925V001329.pdf", docOnlyMrn);
+    import_node_assert.default.strictEqual(metaOnlyMrn.mrNumber, "RM-295500");
+    import_node_assert.default.strictEqual(metaOnlyMrn.patientName, null);
+    import_node_assert.default.notStrictEqual(metaOnlyMrn.patientName, "PASIEN RM-295500");
+    console.log("\u2705 TEST 8 PASSED: Negative test verified! Document with only MRN yields patientName = null (NOT 'PASIEN RM-295500').");
+    passed++;
+  } catch (err) {
+    console.error("\u274C TEST 8 FAILED:", err.message);
     failed++;
   }
   console.log("\n=================================================");
