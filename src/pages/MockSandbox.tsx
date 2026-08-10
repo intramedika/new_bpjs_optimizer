@@ -89,10 +89,29 @@ export default function MockSandbox() {
         setClaims(data.claims)
         setSelectedClaimId(data.claims[0].id)
         setSelectedClaim(data.claims[0])
+      } else {
+        // Auto-create a synthetic claim so Mock Sandbox is ready out of the box
+        await createAndSetSyntheticClaim()
       }
     } catch (e) {
       console.error("Failed to fetch claims:", e)
     }
+  }
+
+  const createAndSetSyntheticClaim = async (): Promise<Claim | null> => {
+    try {
+      const res = await fetch("/api/test-claim/create", { method: "POST" })
+      const data = await res.json()
+      if (res.ok && data.claim) {
+        setClaims(prev => [data.claim, ...prev])
+        setSelectedClaimId(data.claim.id)
+        setSelectedClaim(data.claim)
+        return data.claim
+      }
+    } catch (e) {
+      console.error("Failed to auto-create synthetic claim:", e)
+    }
+    return null
   }
 
   const fetchExecutions = async () => {
@@ -114,17 +133,9 @@ export default function MockSandbox() {
   }
 
   const handleCreateSyntheticClaim = async () => {
-    try {
-      const res = await fetch("/api/test-claim/create", { method: "POST" })
-      const data = await res.json()
-      if (res.ok && data.claim) {
-        alert("Synthetic Test Claim berhasil dibuat: " + data.claim.id)
-        await fetchClaims()
-        setSelectedClaimId(data.claim.id)
-        setSelectedClaim(data.claim)
-      }
-    } catch (e: any) {
-      alert("Gagal membuat synthetic test claim: " + e.message)
+    const claim = await createAndSetSyntheticClaim()
+    if (claim) {
+      alert("Synthetic Test Claim berhasil dibuat: " + claim.id)
     }
   }
 
@@ -173,9 +184,14 @@ export default function MockSandbox() {
   }
 
   const handleRunFullWorkflow = async () => {
-    if (!selectedClaim) {
-      alert("Silakan pilih atau buat klaim terlebih dahulu.")
-      return
+    let activeTarget = selectedClaim;
+    if (!activeTarget) {
+      activeTarget = await createAndSetSyntheticClaim();
+    }
+
+    if (!activeTarget) {
+      alert("Gagal menginisialisasi klaim untuk pengujian workflow.");
+      return;
     }
 
     setIsExecuting(true)
@@ -197,32 +213,32 @@ export default function MockSandbox() {
 
       // Step 3: Diagnosis
       await handleExecuteOperation("mock-eklaim", "diagnosis", {
-        claimId: selectedClaim.id,
-        sepNumber: selectedClaim.sepNumber,
-        principalDiagnosisCode: selectedClaim.principalDiagnosisCode
+        claimId: activeTarget.id,
+        sepNumber: activeTarget.sepNumber,
+        principalDiagnosisCode: activeTarget.principalDiagnosisCode
       })
       updateStep("diagnosis", "SUCCESS")
 
       // Step 4: Procedure
       await handleExecuteOperation("mock-eklaim", "procedure", {
-        claimId: selectedClaim.id,
-        procedures: selectedClaim.procedures
+        claimId: activeTarget.id,
+        procedures: activeTarget.procedures
       })
       updateStep("procedure", "SUCCESS")
 
       // Step 5: Grouping
       const groupRes = await handleExecuteOperation("mock-eklaim", "grouping", {
-        claimId: selectedClaim.id,
-        principalDiagnosisCode: selectedClaim.principalDiagnosisCode,
-        procedures: selectedClaim.procedures,
-        severity: selectedClaim.severity
+        claimId: activeTarget.id,
+        principalDiagnosisCode: activeTarget.principalDiagnosisCode,
+        procedures: activeTarget.procedures,
+        severity: activeTarget.severity
       })
       updateStep("grouper", "SUCCESS")
       updateStep("eklaim_res", "SUCCESS")
 
       // Step 6: VClaim SEP & BPJS Response
       await handleExecuteOperation("mock-vclaim", "SEP", {
-        claimId: selectedClaim.id,
+        claimId: activeTarget.id,
         cardNo: "1234567890"
       })
       updateStep("vclaim_sep", "SUCCESS")
