@@ -14,6 +14,7 @@ import { adminRoutes } from "../server/routes/adminRoutes";
 import { adminDatabaseRoutes } from "../server/routes/adminDatabaseRoutes";
 import revenueRoutes from "../server/routes/revenueRoutes";
 import codingRoutes from "../server/routes/codingRoutes";
+import { aiRoutes } from "../server/routes/aiRoutes";
 import { initializeIntegrationHub } from "../server/integration/Init";
 import { claimRepository } from "../server/repositories/ClaimRepository";
 import { grouperEngine } from "../server/engines/GrouperEngine";

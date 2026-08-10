@@ -2,6 +2,7 @@ import { importRoutes } from "./server/routes/import";
 import { statsRoutes } from "./server/routes/stats";
 import { localRoutes } from "./server/routes/local";
 import { healthRoutes } from "./server/routes/health";
+import { aiRoutes } from "./server/routes/aiRoutes";
 import { integrationRoutes } from "./server/routes/integration";
 import { documentRoutes } from "./server/routes/documents";
 import { testCenterRoutes } from "./server/routes/testCenter";
@@ -47,6 +48,7 @@ async function startServer() {
 
   app.use(integrationRoutes);
   app.use(healthRoutes);
+  app.use(aiRoutes);
   app.use(localRoutes);
   app.use(statsRoutes);
   app.use(importRoutes);

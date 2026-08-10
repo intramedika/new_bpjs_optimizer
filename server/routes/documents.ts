@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { GoogleGenAI } from "@google/genai";
 import { documentRepository, DocumentRecord } from "../repositories/DocumentRepository";
 import { claimRepository } from "../repositories/ClaimRepository";
 import { resolvePrincipalFromRequest } from "../security/SecurityContext";
+import { aiManager } from "../ai/AIManager";
 
 export const documentRoutes = Router();
 
@@ -35,8 +35,7 @@ documentRoutes.post("/api/documents/deduplicate", async (req, res) => {
 // Extract medical document & AUTOMATICALLY CREATE PERSISTED CLAIM
 documentRoutes.post("/api/documents/extract", async (req, res) => {
   try {
-    const { filename, fileData, mimeType, size, hash, forceLocal } = req.body || {};
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { filename, fileData, mimeType, size, hash } = req.body || {};
     const principal = resolvePrincipalFromRequest(req);
 
     const docId = `DOC-${Date.now()}-${Math.floor(Math.random()*1000)}`;
@@ -46,52 +45,14 @@ documentRoutes.post("/api/documents/extract", async (req, res) => {
     let extraction: any = null;
     let status = "REVIEW_REQUIRED";
 
-    if (!forceLocal && apiKey && fileData && typeof fileData === "string" && fileData.length < 4000000) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const prompt = `
-          Analyze this medical document. Extract the following information:
-          - Patient Name
-          - Medical Record Number (MRN)
-          - SEP Number
-          - Document Type (e.g., Resume Medis, SOAP, Laporan Operasi, Hasil Laboratorium, Hasil Radiologi, Resep)
-          - Diagnoses: list any diagnoses found, infer the ICD-10 code if possible, provide a confidence score (0-100), page number (default 1), and source text.
-          - Procedures: list any procedures found, infer the ICD-9-CM code if possible, provide a confidence score, page number, and source text.
-          - Medications: list medications found.
-          - Laboratories: list laboratory results found.
-          
-          Format strictly as a JSON object:
-          {
-            "patientName": string | null,
-            "mrNumber": string | null,
-            "sepNumber": string | null,
-            "documentType": string | null,
-            "diagnoses": [{ "text": string, "code": string | null, "confidence": number, "page": number, "sourceText": string }],
-            "procedures": [{ "text": string, "code": string | null, "confidence": number, "page": number, "sourceText": string }],
-            "medications": [{ "text": string, "confidence": number, "sourceText": string }],
-            "laboratories": [{ "test": string, "result": string, "confidence": number, "sourceText": string }],
-            "matchConfidence": number
-          }
-        `;
-
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [
-            prompt,
-            { inlineData: { data: fileData, mimeType: mimeType || "application/pdf" } }
-          ],
-          config: { responseMimeType: "application/json" }
-        });
-
-        if (response.text) {
-          extraction = JSON.parse(response.text);
-        }
-      } catch (err: any) {
-        console.warn("Cloud Gemini OCR failed, using local OCR fallback:", err?.message || err);
-      }
-    }
-
-    if (!extraction) {
+    try {
+      extraction = await aiManager.extractClinicalEvidence(fileData || "", {
+        documentName: safeFilename,
+        mimeType: mimeType || "application/pdf",
+        hash: fileHash
+      });
+    } catch (err: any) {
+      console.warn("AI extraction warning, using fallback:", err?.message || err);
       extraction = generateLocalExtraction(safeFilename);
     }
 
