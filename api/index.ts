@@ -35,7 +35,11 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Normalize Vercel Serverless request path for rewrites
 app.use((req, res, next) => {
-  if (req.url && !req.url.startsWith("/api")) {
+  const matchedPath = (req.headers["x-matched-path"] as string) || (req.headers["x-now-route-matches"] as string);
+  if (matchedPath && matchedPath.startsWith("/api")) {
+    const search = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
+    req.url = matchedPath + search;
+  } else if (req.url && !req.url.startsWith("/api")) {
     req.url = "/api" + (req.url.startsWith("/") ? req.url : "/" + req.url);
   }
   next();
