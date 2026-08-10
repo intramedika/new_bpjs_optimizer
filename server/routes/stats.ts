@@ -4,13 +4,19 @@ import { syncQueueRepository } from "../repositories/SyncQueueRepository";
 
 export const statsRoutes = Router();
 
-statsRoutes.get("/api/stats", async (req, res) => {
+statsRoutes.get(["/api/stats", "/stats"], async (req, res) => {
   try {
-    const dataMode = (req.query.dataMode as string) || "REAL";
-    const claims = await claimRepository.findAll(dataMode);
-    const queue = await syncQueueRepository.findAll();
+    const dataMode = (req.query.dataMode as string) || "ALL";
+    const claims = await claimRepository.findAll(dataMode).catch(() => []);
+    const queue = await syncQueueRepository.findAll().catch(() => []);
     
-    res.json({
+    let totalTariff = 0;
+    claims.forEach(c => {
+      totalTariff += (c.tariff || 0);
+    });
+
+    return res.json({
+      success: true,
       activeMode: dataMode,
       totalClaims: claims.length,
       readyClaims: claims.filter(c => c.status === "Siap Diajukan").length,
@@ -18,10 +24,17 @@ statsRoutes.get("/api/stats", async (req, res) => {
       submittedClaims: claims.filter(c => c.status === "Sudah Diajukan" || c.status === "Dibayar").length,
       disputeClaims: claims.filter(c => c.status === "Dispute").length,
       offlineQueue: queue.length,
-      totalTariff: claims.reduce((acc, c) => acc + (c.tariff || 0), 0)
+      totalTariff
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch stats" });
+  } catch (error: any) {
+    console.error("[Stats API Error]:", error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: "STATS_ERROR",
+        message: "Failed to calculate operational stats",
+        requestId: `req-stats-${Date.now()}`
+      }
+    });
   }
 });

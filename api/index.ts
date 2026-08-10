@@ -64,12 +64,12 @@ app.use(adminDatabaseRoutes);
 app.use("/api", revenueRoutes);
 app.use("/api", codingRoutes);
 
-app.get("/api/documents", requirePermission(Permission.CLINICAL_READ), async (req, res) => {
+app.get(["/api/documents", "/documents"], requirePermission(Permission.CLINICAL_READ), async (req, res) => {
   const docs = await documentRepository.findAll().catch(() => []);
   res.json(docs);
 });
 
-app.get("/api/claims", requirePermission(Permission.CLAIM_READ), async (req, res) => {
+app.get(["/api/claims", "/claims"], requirePermission(Permission.CLAIM_READ), async (req, res) => {
   const principal = (req as any).principal || resolvePrincipalFromRequest(req);
   const dataMode = (req.query.dataMode as string) || "ALL";
   let claims = await claimRepository.findAll(dataMode, {
@@ -83,7 +83,7 @@ app.get("/api/claims", requirePermission(Permission.CLAIM_READ), async (req, res
   res.json({ status: "success", claims, count: claims.length });
 });
 
-app.get("/api/claims/:id", requirePermission(Permission.CLAIM_READ), authorizeClaimResource, async (req, res) => {
+app.get(["/api/claims/:id", "/claims/:id"], requirePermission(Permission.CLAIM_READ), authorizeClaimResource, async (req, res) => {
   const principal = (req as any).principal || resolvePrincipalFromRequest(req);
   const claim = (req as any).claim || await claimRepository.findById(req.params.id, {
     tenantId: principal.tenantId,
@@ -99,7 +99,7 @@ app.get("/api/claims/:id", requirePermission(Permission.CLAIM_READ), authorizeCl
   res.json(claim);
 });
 
-app.put("/api/claims/:id", requirePermission(Permission.CLAIM_UPDATE), authorizeClaimResource, async (req, res) => {
+app.put(["/api/claims/:id", "/claims/:id"], requirePermission(Permission.CLAIM_UPDATE), authorizeClaimResource, async (req, res) => {
   const principal = (req as any).principal || resolvePrincipalFromRequest(req);
   try {
     const updated = await claimRepository.update(req.params.id, req.body, {
