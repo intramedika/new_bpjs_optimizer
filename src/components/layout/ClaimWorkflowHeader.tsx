@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CheckCircle2, ChevronRight, FileText, BrainCircuit, Code, ShieldCheck, Activity, Scale, Send, ArrowRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, FileText, BrainCircuit, Code, ShieldCheck, Activity, Scale, Send, ArrowRight, TrendingUp } from "lucide-react";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { cn } from "../../lib/utils";
@@ -17,10 +17,10 @@ interface Step {
 const steps: Step[] = [
   { id: 1, label: "1. Intake", route: ROUTES.SMART_INTAKE, icon: FileText },
   { id: 2, label: "2. Clinical", route: ROUTES.CLINICAL, icon: BrainCircuit },
-  { id: 3, label: "3. Coding", route: ROUTES.GROUPER, icon: Code },
-  { id: 4, label: "4. Validation", route: ROUTES.READINESS, icon: ShieldCheck },
-  { id: 5, label: "5. Grouper", route: ROUTES.GROUPER, icon: Activity },
-  { id: 6, label: "6. Readiness", route: ROUTES.READINESS, icon: CheckCircle2 },
+  { id: 3, label: "3. Coding & Grouper", route: ROUTES.GROUPER, icon: Code },
+  { id: 4, label: "4. Optimizer", route: ROUTES.REVENUE_OPTIMIZER, icon: TrendingUp },
+  { id: 5, label: "5. Readiness", route: ROUTES.READINESS, icon: CheckCircle2 },
+  { id: 6, label: "6. Risk Engine", route: ROUTES.RISK, icon: ShieldCheck },
   { id: 7, label: "7. E-Klaim Ready", route: `${ROUTES.CLAIMS}?status=siap`, icon: Send }
 ];
 

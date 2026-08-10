@@ -14,6 +14,9 @@ import LocalQueue from "./pages/LocalQueue"
 import SimrsIntegration from "./pages/SimrsIntegration"
 import ClinicalIntelligence from "./pages/ClinicalIntelligence"
 import CodingGrouper from "./pages/CodingGrouper"
+import RevenueOptimizer from "./pages/RevenueOptimizer"
+import RevenueOpportunityQueue from "./pages/RevenueOpportunityQueue"
+import RevenueImpactDashboard from "./pages/RevenueImpactDashboard"
 import ClaimReadiness from "./pages/ClaimReadiness"
 import RiskEngine from "./pages/RiskEngine"
 import Settings from "./pages/Settings"
@@ -51,6 +54,12 @@ function AppRoutes() {
         
         <Route path={ROUTES.GROUPER} element={<CodingGrouper />} />
         <Route path={`${ROUTES.GROUPER}/:claimId`} element={<CodingGrouper />} />
+
+        {/* Evidence-Based Revenue Optimizer Engine */}
+        <Route path={ROUTES.REVENUE_OPTIMIZER} element={<RevenueOptimizer />} />
+        <Route path={`${ROUTES.REVENUE_OPTIMIZER}/:claimId`} element={<RevenueOptimizer />} />
+        <Route path={ROUTES.REVENUE_OPPORTUNITY_QUEUE} element={<RevenueOpportunityQueue />} />
+        <Route path={ROUTES.REVENUE_IMPACT} element={<RevenueImpactDashboard />} />
         
         <Route path={ROUTES.READINESS} element={<ClaimReadiness />} />
         <Route path={`${ROUTES.READINESS}/:claimId`} element={<ClaimReadiness />} />

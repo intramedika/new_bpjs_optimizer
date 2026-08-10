@@ -57,6 +57,9 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
     {
       name: 'Analytics',
       items: [
+        { name: '⚡ Revenue Optimizer', href: ROUTES.REVENUE_OPTIMIZER, icon: Sparkles },
+        { name: 'Opportunity Queue', href: ROUTES.REVENUE_OPPORTUNITY_QUEUE, icon: TrendingDown },
+        { name: 'Revenue Impact', href: ROUTES.REVENUE_IMPACT, icon: Activity },
         { name: 'Risk Engine', href: ROUTES.RISK, icon: ShieldAlert },
         { name: 'Post-Grouping Reconciliation', href: ROUTES.RECONCILIATION, icon: Activity },
       ]

@@ -421,8 +421,8 @@ export default function CodingGrouper() {
       {activeClaim && (
         <ClaimWorkflowHeader 
           currentStep={3} 
-          nextRoute={ROUTES.READINESS} 
-          nextLabel="[Lanjut ke Claim Readiness]" 
+          nextRoute={ROUTES.REVENUE_OPTIMIZER} 
+          nextLabel="[ Optimasi Klaim Revenue → ]" 
         />
       )}
 
