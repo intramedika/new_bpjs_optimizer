@@ -20,9 +20,33 @@ export default function ClaimQueue() {
   const [loading, setLoading] = useState(true)
   const [activeDataMode, setActiveDataMode] = useState<DataMode | "ALL">("ALL")
 
+  const [isSyncingSimrs, setIsSyncingSimrs] = useState(false)
+
   useEffect(() => {
     fetchClaims(activeDataMode)
   }, [activeDataMode, currentUser])
+
+  const handleSyncSimrsClaims = async () => {
+    setIsSyncingSimrs(true)
+    try {
+      const res = await fetch("/api/simrs/sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": currentUser?.userId || "usr-admin-001"
+        }
+      })
+      const data = await res.json()
+      if (data.claims) {
+        alert("✓ 3 Data Klaim SIMRS Sandbox berhasil ditarik ke Claim Queue!")
+        fetchClaims(activeDataMode)
+      }
+    } catch (e: any) {
+      console.error(e)
+    } finally {
+      setIsSyncingSimrs(false)
+    }
+  }
 
   const fetchClaims = async (mode: string) => {
     setLoading(true)
@@ -133,6 +157,15 @@ export default function ClaimQueue() {
         </div>
 
         <div className="flex items-center gap-2 font-mono">
+          <Button 
+            onClick={handleSyncSimrsClaims}
+            disabled={isSyncingSimrs}
+            size="sm" 
+            className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold font-mono shadow-sm"
+          >
+            {isSyncingSimrs ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Database className="w-3.5 h-3.5 mr-1" />}
+            Tarik Data SIMRS Sandbox
+          </Button>
           <Link to="/import">
             <Button variant="outline" size="sm" className="text-xs font-bold bg-white text-slate-700 border-slate-200">
               <FilePlus className="w-3.5 h-3.5 mr-1 text-blue-600" /> Import E-Klaim
@@ -196,13 +229,17 @@ export default function ClaimQueue() {
               <div>
                 <h3 className="text-lg font-bold text-slate-900 uppercase font-mono">BELUM ADA KLAIM</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Database aplikasi kosong. Unggah berkas rekam medis PDF melalui Smart Document Intake atau Import file TXT/CSV/JSON.
+                  Database aplikasi kosong. Tarik 3 Data Klaim Live SIMRS Sandbox atau unggah berkas rekam medis PDF melalui Smart Document Intake.
                 </p>
               </div>
               <div className="pt-2 flex flex-col gap-2 font-mono text-xs">
+                <Button onClick={handleSyncSimrsClaims} disabled={isSyncingSimrs} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold">
+                  {isSyncingSimrs ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Database className="w-4 h-4 mr-1.5" />}
+                  [ Tarik Data SIMRS Sandbox (3 Klaim Live SIMRS) ]
+                </Button>
                 <Link to="/smart-intake" className="w-full">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                    [ Mulai Klaim Baru via Smart Intake ]
+                  <Button variant="outline" className="w-full font-bold">
+                    [ Mulai Klaim Baru via Smart Intake PDF ]
                   </Button>
                 </Link>
               </div>

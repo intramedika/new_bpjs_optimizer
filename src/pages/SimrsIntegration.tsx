@@ -193,13 +193,31 @@ export default function SimrsIntegration() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-3 border-t font-mono">
+            <div className="flex flex-wrap gap-3 pt-3 border-t font-mono">
               <Button onClick={handleSaveConfig} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold">
                 <Check className="w-3.5 h-3.5 mr-1.5" /> Simpan Konfigurasi
               </Button>
               <Button onClick={handleTestConnection} disabled={isTesting} variant="outline" className="text-xs font-bold">
                 {isTesting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Play className="w-3.5 h-3.5 mr-1.5 text-blue-600" />}
                 Uji Koneksi via IntegrationHub
+              </Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    await fetch("/api/simrs/sync", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "X-User-Id": "usr-admin-001" }
+                    });
+                    alert("✓ 3 Data Klaim SIMRS Sandbox berhasil ditarik ke Claim Queue!");
+                    window.location.href = "/klaim";
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }} 
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold"
+              >
+                <Database className="w-3.5 h-3.5 mr-1.5" />
+                [ 📥 Tarik Data SIMRS Sandbox ke Claim Queue ]
               </Button>
             </div>
           </div>

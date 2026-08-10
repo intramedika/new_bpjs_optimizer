@@ -198,7 +198,6 @@ integrationRoutes.post("/api/test-claim/create", authenticateRequest, requirePer
       coderName: "Synthetic Test Coder",
       dataMode: "TEST",
       sourceType: "MANUAL_TEST",
-      sourceReference: "MOCK_SANDBOX_CREATOR"
     } as any, {
       tenantId: principal.tenantId,
       groupId: principal.groupId,
@@ -208,6 +207,135 @@ integrationRoutes.post("/api/test-claim/create", authenticateRequest, requirePer
     });
 
     res.json({ status: "success", message: "Synthetic test claim successfully created.", claim: testClaim });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Bulk SIMRS Intake Endpoint
+integrationRoutes.post("/api/simrs/sync", authenticateRequest, requirePermission(Permission.CLAIM_CREATE), async (req, res) => {
+  try {
+    const principal = (req as any).principal || resolvePrincipalFromRequest(req);
+    const timestamp = Date.now();
+    const today = new Date().toISOString().split("T")[0];
+
+    const simrsClaimsData = [
+      {
+        id: `CLM-SIMRS-001-${timestamp}`,
+        claimNumber: `K-SIMRS-001-${timestamp.toString().slice(-4)}`,
+        sepNumber: `1112R0010826V0001`,
+        patientId: `PAT-SIMRS-001`,
+        patient: {
+          id: `PAT-SIMRS-001`,
+          name: "BAPAK SUTRISNO (SIMRS LIVE)",
+          mrNumber: "RM-SIMRS-100234",
+          gender: "L",
+          dob: "1965-08-17"
+        },
+        serviceDate: today,
+        dischargeDate: today,
+        principalDiagnosis: "Cirrhosis of liver, unspecified",
+        principalDiagnosisCode: "K74.6",
+        secondaryDiagnoses: ["R18.8", "K92.1"],
+        procedures: ["89.52"],
+        cbgCode: "B-4-10-III",
+        cbgDescription: "Penyakit Hati Kronis Berat",
+        severity: 3,
+        tariff: 12850000,
+        readinessScore: 94,
+        risk: "LOW",
+        status: "Siap Diajukan",
+        doctorName: "dr. Hendra Sp.PD-KGEH (DPJP SIMRS)",
+        unit: "Rawat Inap Cendana 3",
+        coderName: "SIMRS Auto Intake",
+        dataMode: "REAL",
+        sourceType: "SIMRS",
+        sourceReference: "SIMRS_REST_FHIR_BRIDGING"
+      },
+      {
+        id: `CLM-SIMRS-002-${timestamp}`,
+        claimNumber: `K-SIMRS-002-${timestamp.toString().slice(-4)}`,
+        sepNumber: `1112R0010826V0002`,
+        patientId: `PAT-SIMRS-002`,
+        patient: {
+          id: `PAT-SIMRS-002`,
+          name: "IBU MARIAM (SIMRS LIVE)",
+          mrNumber: "RM-SIMRS-100235",
+          gender: "P",
+          dob: "1972-11-04"
+        },
+        serviceDate: today,
+        dischargeDate: today,
+        principalDiagnosis: "Type 2 diabetes mellitus with ketoacidosis",
+        principalDiagnosisCode: "E11.1",
+        secondaryDiagnoses: ["I10"],
+        procedures: ["90.59"],
+        cbgCode: "E-4-10-II",
+        cbgDescription: "Diabetes Mellitus Sedang",
+        severity: 2,
+        tariff: 6800000,
+        readinessScore: 91,
+        risk: "LOW",
+        status: "Siap Diajukan",
+        doctorName: "dr. Maya Sp.PD (DPJP SIMRS)",
+        unit: "Rawat Inap Melati 2",
+        coderName: "SIMRS Auto Intake",
+        dataMode: "REAL",
+        sourceType: "SIMRS",
+        sourceReference: "SIMRS_REST_FHIR_BRIDGING"
+      },
+      {
+        id: `CLM-SIMRS-003-${timestamp}`,
+        claimNumber: `K-SIMRS-003-${timestamp.toString().slice(-4)}`,
+        sepNumber: `1112R0010826V0003`,
+        patientId: `PAT-SIMRS-003`,
+        patient: {
+          id: `PAT-SIMRS-003`,
+          name: "SDR. JOKO TRIYONO (SIMRS LIVE)",
+          mrNumber: "RM-SIMRS-100236",
+          gender: "L",
+          dob: "1994-03-22"
+        },
+        serviceDate: today,
+        dischargeDate: today,
+        principalDiagnosis: "Pneumonia, unspecified",
+        principalDiagnosisCode: "J18.9",
+        secondaryDiagnoses: ["E11.9"],
+        procedures: ["89.52"],
+        cbgCode: "J-4-16-II",
+        cbgDescription: "Pneumonia Sedang/Berat",
+        severity: 2,
+        tariff: 5420000,
+        readinessScore: 95,
+        risk: "LOW",
+        status: "Siap Diajukan",
+        doctorName: "dr. Bambang Sp.P (DPJP SIMRS)",
+        unit: "Rawat Inap Paru",
+        coderName: "SIMRS Auto Intake",
+        dataMode: "REAL",
+        sourceType: "SIMRS",
+        sourceReference: "SIMRS_REST_FHIR_BRIDGING"
+      }
+    ];
+
+    const createdClaims = [];
+    for (const cData of simrsClaimsData) {
+      const created = await claimRepository.create(cData as any, {
+        tenantId: principal.tenantId,
+        groupId: principal.groupId,
+        hospitalId: principal.hospitalId,
+        userId: principal.userId,
+        role: principal.role
+      });
+      createdClaims.push(created);
+    }
+
+    res.json({
+      status: "success",
+      count: createdClaims.length,
+      message: `${createdClaims.length} data klaim SIMRS Sandbox berhasil ditarik ke Claim Queue!`,
+      claims: createdClaims
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
