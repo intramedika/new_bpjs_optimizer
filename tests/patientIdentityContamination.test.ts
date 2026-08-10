@@ -154,6 +154,38 @@ async function runTests() {
     failed++;
   }
 
+  // TEST 9: Universal Multi-Pass PDF & OCR Layout Extractor Test (Arbitrary Document Formats)
+  try {
+    // Format A: Title/Degree Name Format
+    const pdfDataA = Buffer.from("/F1 12 Tf (Nama Peserta) Tj ( : ) Tj (DR. AHMAD DANI, M.KES) Tj\nNo. RM : RM-998811").toString("base64");
+    const metaFormatA = extractPdfMetadata("Custom_Doc_A.pdf", pdfDataA);
+    assert.strictEqual(metaFormatA.patientName, "DR. AHMAD DANI, M.KES");
+    assert.strictEqual(metaFormatA.mrNumber, "RM-998811");
+
+    // Format B: Combined Label & MRN Format
+    const pdfDataB = Buffer.from("Nama Pasien / RM : NURHAYATI [RM-889911]\nNo. SEP : 0801R0018888V000999").toString("base64");
+    const metaFormatB = extractPdfMetadata("Custom_Doc_B.pdf", pdfDataB);
+    assert.strictEqual(metaFormatB.patientName, "NURHAYATI");
+    assert.strictEqual(metaFormatB.mrNumber, "RM-889911");
+
+    // Format C: English Layout Format
+    const pdfDataC = Buffer.from("Patient Name: HENDRA WIJAYA\nMRN: RM-774411").toString("base64");
+    const metaFormatC = extractPdfMetadata("Custom_Doc_C.pdf", pdfDataC);
+    assert.strictEqual(metaFormatC.patientName, "HENDRA WIJAYA");
+    assert.strictEqual(metaFormatC.mrNumber, "RM-774411");
+
+    // Format D: Multi-Token PDF Stream Parentheses Format
+    const pdfDataD = Buffer.from("(Surat Elegibilitas Peserta) Tj (Peserta) Tj ( : ROSITA) Tj").toString("base64");
+    const metaFormatD = extractPdfMetadata("Custom_Doc_D.pdf", pdfDataD);
+    assert.strictEqual(metaFormatD.patientName, "ROSITA");
+
+    console.log("✅ TEST 9 PASSED: Universal Multi-Pass Engine dynamically extracts DR. AHMAD DANI, NURHAYATI, HENDRA WIJAYA, and ROSITA.");
+    passed++;
+  } catch (err: any) {
+    console.error("❌ TEST 9 FAILED:", err.message);
+    failed++;
+  }
+
   console.log("\n=================================================");
   console.log(`TEST SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log("=================================================");

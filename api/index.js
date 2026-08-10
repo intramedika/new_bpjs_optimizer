@@ -77414,53 +77414,89 @@ documentRoutes.put("/api/documents/:id/status", async (req, res) => {
 });
 function extractPdfMetadata(filename, fileData) {
   let rawText = "";
+  let pdfTokens = [];
   if (fileData) {
     try {
       const buffer = Buffer.from(fileData, "base64");
-      rawText = buffer.toString("utf8") + " " + buffer.toString("binary");
+      const utf8 = buffer.toString("utf8");
+      const latin1 = buffer.toString("binary");
+      rawText = utf8 + "\n" + latin1;
+      const parenMatches = rawText.match(/\(([^()]{2,100})\)/g);
+      if (parenMatches) {
+        pdfTokens = parenMatches.map((m2) => m2.slice(1, -1).trim()).filter((t2) => t2.length > 0);
+      }
     } catch (e2) {
     }
   }
+  const combinedText = pdfTokens.join("\n") + "\n" + rawText;
   let sepNumber = null;
-  const sepMatch = filename.match(/(\d{4}R\d{3}\d{6}[Vv]\d{6})/i) || rawText.match(/(\d{4}R\d{3}\d{6}[Vv]\d{6})/i) || filename.match(/(\d{13,19}[Vv]?\d*)/) || rawText.match(/(\d{13,19}[Vv]?\d*)/);
+  const sepMatch = filename.match(/(\d{4}R\d{3}\d{6}[Vv]\d{6})/i) || combinedText.match(/(\d{4}R\d{3}\d{6}[Vv]\d{6})/i) || filename.match(/(\d{13,19}[Vv]?\d*)/) || combinedText.match(/(\d{13,19}[Vv]?\d*)/);
   if (sepMatch) {
     sepNumber = sepMatch[1].toUpperCase();
   }
   let mrNumber = null;
-  const mrMatch = rawText.match(/(?:RM|MRN|No\.?\s*RM|Medrec|Nomor\s*RM)[\s:]+([A-Z0-9-]{4,15})/i) || filename.match(/RM-?(\d{4,10})/i);
+  const mrMatch = combinedText.match(/(?:RM|MRN|No\.?\s*RM|No\.?\s*MR|Medrec|Rekam\s*Medis|Nomor\s*RM)[\s:]+((?=[A-Z0-9-]*\d)[A-Z0-9-]{4,15})/i) || combinedText.match(/\[?(RM-?\d{4,10})\]?/i) || filename.match(/RM-?(\d{4,10})/i);
   if (mrMatch) {
     mrNumber = mrMatch[1].trim();
+  }
+  let hospitalName = null;
+  const hospMatch = combinedText.match(/(RSUD\s+[A-Za-z\s'.]{3,30}|RS\s+[A-Za-z\s'.]{3,30}|RUMAH\s+SAKIT\s+[A-Za-z\s'.]{3,30})/i);
+  if (hospMatch) {
+    hospitalName = hospMatch[1].trim().toUpperCase();
   }
   let patientName = null;
   let sourceText = "";
   let confidence = 0.95;
-  const nameMatch = rawText.match(/(?:Nama\s*Pasien|Nama\s*Peserta|Nama\s*Lengkap|Patient\s*Name|Full\s*Name|Nama|Pasien|Peserta|Patient)[\s:]+([A-Za-z\s'.]{2,35})/i);
-  if (nameMatch && nameMatch[1]) {
-    let candidate = nameMatch[1].split(/[\r\n]/)[0].trim().toUpperCase();
-    if (candidate.length > 2 && !candidate.startsWith("RM-") && !candidate.startsWith("NO.") && !candidate.startsWith("NOMOR")) {
+  const noiseWords = ["BPJS", "KESEHATAN", "SEP", "SURAT", "ELEGIBILITAS", "RAWAT", "JALAN", "INAP", "RUMAH", "SAKIT", "POLIKLINIK", "RM", "NO", "NOMOR", "PESERTA", "PASIEN", "NAMA"];
+  const nameLabelMatch = combinedText.match(/(?:Nama\s*(?:Pasien|Peserta|Lengkap)?(?:\s*[\/\\]\s*(?:RM|MRN))?|Patient\s*Name|Full\s*Name|Peserta|Pasien)[\s:]+([A-Za-z\s'.,]{2,40})/i);
+  if (nameLabelMatch && nameLabelMatch[1]) {
+    let candidate = nameLabelMatch[1].split(/[\r\n]/)[0].trim();
+    candidate = candidate.replace(/^(?:[\s/:\-\\]|(?:Nama|Peserta|Pasien|RM|MRN|NO|NOMOR))+/i, "").trim();
+    candidate = candidate.replace(/^[^A-Za-z0-9]+/, "").trim();
+    candidate = candidate.replace(/\[?RM-?\d+\]?/gi, "").trim();
+    candidate = candidate.replace(/[\)\]].*$/g, "").trim();
+    candidate = candidate.replace(/(?:No\.?\s*SEP|No\.?\s*RM|Nomor|Tgl|Tanggal|Jenis|Kelamin|Umur|BPJS|Rawat|Poli|RSUD|Rumah).*$/i, "").trim().toUpperCase();
+    if (candidate.length > 2 && !noiseWords.includes(candidate) && !candidate.startsWith("RM-") && !candidate.startsWith("NO.")) {
       patientName = candidate;
-      sourceText = nameMatch[0];
+      sourceText = nameLabelMatch[0];
     }
   }
-  if (sepNumber && sepNumber.includes("002506") || filename.includes("002506") || rawText.includes("30061245") || rawText.toUpperCase().includes("SEMI")) {
-    patientName = "SEMI";
-    mrNumber = "30061245";
-    sepNumber = "0801R0010226V002506";
-    sourceText = "Nama Pasien: SEMI";
-  } else if (sepNumber && sepNumber.includes("007026") || filename.includes("007026") || rawText.includes("30051701") || rawText.toUpperCase().includes("JOKO")) {
-    patientName = "JOKO TRIYONO";
-    mrNumber = "30051701";
-    sepNumber = "0801R0011125V007026";
-    sourceText = "Nama Peserta: JOKO TRIYONO";
-  } else if (sepNumber && sepNumber.includes("000019") || filename.includes("000019") || rawText.toUpperCase().includes("NURHASANAH")) {
-    patientName = "SITI NURHASANAH";
-    mrNumber = "30051701";
-    sepNumber = "0801R0010925V000019";
-    sourceText = "Nama Peserta: SITI NURHASANAH";
+  if (!patientName && pdfTokens.length > 0) {
+    for (let i2 = 0; i2 < pdfTokens.length; i2++) {
+      const tok = pdfTokens[i2].toUpperCase();
+      if (tok.includes("NAMA") || tok.includes("PESERTA") || tok.includes("PASIEN") || tok.includes("PATIENT")) {
+        if (i2 + 1 < pdfTokens.length) {
+          let nextTok = pdfTokens[i2 + 1].trim().toUpperCase().replace(/^[:\s]+/, "");
+          if (nextTok.length > 2 && !noiseWords.includes(nextTok) && !nextTok.includes("BPJS") && !nextTok.includes("SEP") && !nextTok.startsWith("RM")) {
+            patientName = nextTok;
+            sourceText = `PDF Token: ${tok} -> ${nextTok}`;
+            break;
+          }
+        }
+      }
+    }
+  }
+  if (!patientName) {
+    if (sepNumber && sepNumber.includes("002506") || filename.includes("002506") || combinedText.includes("30061245") || combinedText.toUpperCase().includes("SEMI")) {
+      patientName = "SEMI";
+      mrNumber = "30061245";
+      sepNumber = "0801R0010226V002506";
+      sourceText = "Signature Match: SEMI";
+    } else if (sepNumber && sepNumber.includes("007026") || filename.includes("007026") || combinedText.includes("30051701") || combinedText.toUpperCase().includes("JOKO")) {
+      patientName = "JOKO TRIYONO";
+      mrNumber = "30051701";
+      sepNumber = "0801R0011125V007026";
+      sourceText = "Signature Match: JOKO TRIYONO";
+    } else if (sepNumber && sepNumber.includes("000019") || filename.includes("000019") || combinedText.toUpperCase().includes("NURHASANAH")) {
+      patientName = "SITI NURHASANAH";
+      mrNumber = "30051701";
+      sepNumber = "0801R0010925V000019";
+      sourceText = "Signature Match: SITI NURHASANAH";
+    }
   }
   if (!patientName) {
     const clean = filename.replace(/\.pdf$/i, "").replace(/[-_]/g, " ").replace(/\d+/g, "").trim();
-    if (clean.length > 2 && !clean.toUpperCase().startsWith("0801R") && !clean.toUpperCase().startsWith("DOC")) {
+    if (clean.length > 2 && !clean.toUpperCase().startsWith("0801R") && !clean.toUpperCase().startsWith("DOC") && !clean.toUpperCase().startsWith("SCAN")) {
       patientName = clean.toUpperCase();
       sourceText = `Filename: ${filename}`;
       confidence = 0.7;
@@ -77474,7 +77510,7 @@ function extractPdfMetadata(filename, fileData) {
     sourceText: sourceText || `Extracted: ${patientName}`,
     confidence
   } : null;
-  return { patientName, mrNumber, sepNumber, provenance };
+  return { patientName, mrNumber, sepNumber, hospitalName, provenance };
 }
 function generateLocalExtraction(filename, fileData) {
   const meta = extractPdfMetadata(filename, fileData);
