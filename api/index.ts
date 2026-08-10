@@ -33,6 +33,14 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Normalize Vercel Serverless request path for rewrites
+app.use((req, res, next) => {
+  if (req.url && !req.url.startsWith("/api")) {
+    req.url = "/api" + (req.url.startsWith("/") ? req.url : "/" + req.url);
+  }
+  next();
+});
+
 // Global Authentication & Principal Scope Middleware
 app.use(authenticateRequest);
 
