@@ -28,9 +28,39 @@ import { Button } from "../components/ui/Button"
 import { Badge } from "../components/ui/Badge"
 import { cn } from "../lib/utils"
 
+const defaultAdapters = [
+  {
+    adapterId: "eklaim",
+    name: "E-Klaim INA-CBG Adapter",
+    provider: "Kementerian Kesehatan RI",
+    environment: "MOCK",
+    status: "MOCK_CONNECTED",
+    isMockAdapter: true,
+    capabilities: ["Grouping INA-CBG", "Severity Qualifier", "Tariff Calculation", "Claim Finalization"]
+  },
+  {
+    adapterId: "vclaim",
+    name: "BPJS VClaim Adapter",
+    provider: "BPJS Kesehatan",
+    environment: "MOCK",
+    status: "MOCK_CONNECTED",
+    isMockAdapter: true,
+    capabilities: ["Cek Kepesertaan", "Generate SEP", "Rujukan Faskes", "Monitoring Klaim"]
+  },
+  {
+    adapterId: "simrs",
+    name: "SIMRS / HIS Connector",
+    provider: "Internal Hospital System",
+    environment: "MOCK",
+    status: "MOCK_CONNECTED",
+    isMockAdapter: true,
+    capabilities: ["Patient Record Intake", "Encounter Data", "Billing Record Sync", "Medical Resume Extraction"]
+  }
+]
+
 export default function Integration() {
   const [healthMap, setHealthMap] = useState<Record<string, any>>({})
-  const [adapters, setAdapters] = useState<any[]>([])
+  const [adapters, setAdapters] = useState<any[]>(defaultAdapters)
   const [executions, setExecutions] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<"adapters" | "simulator" | "logs">("adapters")
   
@@ -56,23 +86,30 @@ export default function Integration() {
 
   const fetchHubData = async () => {
     try {
+      const headers = { "X-User-Id": "usr-admin-001" }
+
       // 1. Fetch Registered Adapters
-      const adRes = await fetch("/api/integration/adapters")
+      const adRes = await fetch("/api/integration/adapters", { headers })
       const adData = await adRes.json()
-      if (adData.adapters) setAdapters(adData.adapters)
+      if (adData.adapters && adData.adapters.length > 0) {
+        setAdapters(adData.adapters)
+      } else {
+        setAdapters(defaultAdapters)
+      }
 
       // 2. Fetch Central Health Matrix
-      const hRes = await fetch("/api/integration/health")
+      const hRes = await fetch("/api/integration/health", { headers })
       const hData = await hRes.json()
       if (hData.health) setHealthMap(hData.health)
 
       // 3. Fetch Execution Audit Logs
-      const exRes = await fetch("/api/integration/executions")
+      const exRes = await fetch("/api/integration/executions", { headers })
       const exData = await exRes.json()
       if (exData.executions) setExecutions(exData.executions)
 
     } catch (error) {
       console.error("Failed to load Integration Hub data:", error)
+      setAdapters(defaultAdapters)
     }
   }
 
