@@ -66,11 +66,15 @@ export const ClaimProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         console.warn("[ClaimContext] Server fetch fallback:", err);
       }
 
-      // Merge API claims with browser persistent claims store
+      // Merge API claims with browser persistent claims store (sanitizing stale records)
       let localStore: Claim[] = [];
       try {
         const saved = localStorage.getItem("bpjs_claims_store");
-        if (saved) localStore = JSON.parse(saved);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          localStore = Array.isArray(parsed) ? parsed.filter(c => c && c.patient?.name !== "Siti Nurhaliza") : [];
+          localStorage.setItem("bpjs_claims_store", JSON.stringify(localStore));
+        }
       } catch (e) {}
 
       const mergedList = [...apiList];

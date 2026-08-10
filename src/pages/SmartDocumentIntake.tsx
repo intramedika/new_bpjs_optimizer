@@ -201,7 +201,13 @@ export default function SmartDocumentIntake() {
   const [documents, setDocuments] = useState<DocItem[]>(() => {
     try {
       const saved = localStorage.getItem('bpjs_documents_store');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const cleaned = Array.isArray(parsed) ? parsed.filter((d: any) => d && d.extraction?.patientName !== "Siti Nurhaliza") : [];
+        localStorage.setItem('bpjs_documents_store', JSON.stringify(cleaned));
+        return cleaned;
+      }
+      return [];
     } catch {
       return [];
     }
@@ -211,7 +217,8 @@ export default function SmartDocumentIntake() {
     try {
       const saved = localStorage.getItem('bpjs_documents_store');
       const docs = saved ? JSON.parse(saved) : [];
-      return docs.length > 0 ? 0 : null;
+      const cleaned = docs.filter((d: any) => d && d.extraction?.patientName !== "Siti Nurhaliza");
+      return cleaned.length > 0 ? 0 : null;
     } catch {
       return null;
     }
@@ -609,9 +616,29 @@ export default function SmartDocumentIntake() {
 
           {/* Queue Items List */}
           <div className="space-y-3 flex-1 flex flex-col min-h-0 font-mono">
-            <h3 className="text-xs font-bold text-slate-800 px-1 uppercase tracking-wider shrink-0">
-              Daftar Dokumen ({documents.length})
-            </h3>
+            <div className="flex items-center justify-between px-1 shrink-0">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Daftar Dokumen ({documents.length})
+              </h3>
+              {documents.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 text-[10px] text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
+                  onClick={() => {
+                    localStorage.removeItem('bpjs_documents_store');
+                    localStorage.removeItem('bpjs_claims_store');
+                    localStorage.removeItem('bpjs_active_claim_id');
+                    localStorage.removeItem('bpjs_active_claim');
+                    setDocuments([]);
+                    setSelectedDocIndex(null);
+                    refreshClaims();
+                  }}
+                >
+                  <Trash2 className="w-3 h-3 mr-1" /> Bersihkan Cache
+                </Button>
+              )}
+            </div>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {documents.length === 0 ? (
