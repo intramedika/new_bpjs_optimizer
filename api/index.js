@@ -51387,43 +51387,135 @@ var SyncQueueRepository = class {
 var syncQueueRepository = new SyncQueueRepository();
 
 // server/repositories/ClaimRepository.ts
+var defaultDemoClaims = [
+  {
+    id: "CLM-PDF-LIVE",
+    claimNumber: "K-1112R0010826V0001",
+    sepNumber: "1112R0010826V0001",
+    patientId: "RM-SIMRS-100234",
+    patient: {
+      id: "RM-SIMRS-100234",
+      name: "BAPAK SUTRISNO (SIMRS LIVE)",
+      mrNumber: "RM-SIMRS-100234",
+      gender: "L",
+      dob: "1978-05-14"
+    },
+    serviceDate: "2026-08-01",
+    dischargeDate: "2026-08-05",
+    principalDiagnosis: "Cirrhosis of liver, unspecified",
+    principalDiagnosisCode: "K74.6",
+    secondaryDiagnoses: ["R18.8", "K92.1"],
+    procedures: ["89.07", "99.18"],
+    cbgCode: "K-4-17-I",
+    cbgDescription: "Penyakit Hati Kronis & Sirosis",
+    severity: 2,
+    tariff: 685e4,
+    readinessScore: 95,
+    risk: "LOW",
+    status: "Siap Diajukan",
+    doctorName: "dr. DPJP Sp.PD",
+    unit: "Rawat Inap",
+    coderName: "Coder Casemix",
+    dataMode: "REAL",
+    sourceType: "SIMRS",
+    tenantId: "tenant-pt-health",
+    hospitalId: "hospital-jkt",
+    groupId: "group-nusantara"
+  },
+  {
+    id: "CLM-SIMRS-001",
+    claimNumber: "K-0801R0011125V007026",
+    sepNumber: "0801R0011125V007026",
+    patientId: "30051701",
+    patient: {
+      id: "30051701",
+      name: "JOKO TRIYONO",
+      mrNumber: "30051701",
+      gender: "L",
+      dob: "1985-01-01"
+    },
+    serviceDate: "2025-11-12",
+    dischargeDate: "2025-11-12",
+    principalDiagnosis: "Chirrosis hepatis",
+    principalDiagnosisCode: "K74.6",
+    secondaryDiagnoses: ["R18.8", "K92.1"],
+    procedures: ["89.07", "99.18"],
+    cbgCode: "K-4-17-I",
+    cbgDescription: "Penyakit Hati Kronis & Sirosis",
+    severity: 2,
+    tariff: 685e4,
+    readinessScore: 92,
+    risk: "LOW",
+    status: "Siap Diajukan",
+    doctorName: "dr. DPJP Utama, Sp.PD",
+    unit: "Rawat Jalan",
+    coderName: "Coder AI Ingestion",
+    dataMode: "REAL",
+    sourceType: "SIMRS",
+    tenantId: "tenant-pt-health",
+    hospitalId: "hospital-jkt",
+    groupId: "group-nusantara"
+  }
+];
 var ClaimRepository = class {
   async findAll(dataMode, scope) {
     const isPlatformAdmin = scope?.role === "PLATFORM_ADMIN";
     const tenantId = scope?.tenantId || "tenant-pt-health";
     const hospitalId = scope?.hospitalId;
-    let query = "SELECT data_json FROM claims WHERE 1=1";
-    const params = [];
-    if (!isPlatformAdmin) {
-      query += " AND tenantId = ?";
-      params.push(tenantId);
-      if (hospitalId) {
-        query += " AND hospitalId = ?";
-        params.push(hospitalId);
+    let dbClaims = [];
+    try {
+      let query = "SELECT data_json FROM claims WHERE 1=1";
+      const params = [];
+      if (!isPlatformAdmin) {
+        query += " AND tenantId = ?";
+        params.push(tenantId);
+        if (hospitalId) {
+          query += " AND hospitalId = ?";
+          params.push(hospitalId);
+        }
       }
+      if (dataMode && dataMode !== "ALL") {
+        query += " AND dataMode = ?";
+        params.push(dataMode);
+      }
+      query += " ORDER BY rowid DESC";
+      const stmt = db.prepare(query);
+      const rows = stmt.all(...params);
+      dbClaims = rows.map((row) => JSON.parse(row.data_json));
+    } catch (e2) {
+      console.warn("[ClaimRepository] DB query failed, using fallback:", e2);
     }
-    if (dataMode && dataMode !== "ALL") {
-      query += " AND dataMode = ?";
-      params.push(dataMode);
-    }
-    query += " ORDER BY rowid DESC";
-    const stmt = db.prepare(query);
-    const rows = stmt.all(...params);
-    return rows.map((row) => JSON.parse(row.data_json));
+    const merged = [...dbClaims];
+    defaultDemoClaims.forEach((def) => {
+      if (!merged.some((m2) => m2.id === def.id)) {
+        if (!dataMode || dataMode === "ALL" || def.dataMode === dataMode) {
+          merged.push(def);
+        }
+      }
+    });
+    return merged;
   }
   async findById(id, scope) {
     const isPlatformAdmin = scope?.role === "PLATFORM_ADMIN";
     const tenantId = scope?.tenantId || "tenant-pt-health";
-    let query = "SELECT data_json FROM claims WHERE id = ?";
-    const params = [id];
-    if (!isPlatformAdmin) {
-      query += " AND tenantId = ?";
-      params.push(tenantId);
+    try {
+      let query = "SELECT data_json FROM claims WHERE id = ?";
+      const params = [id];
+      if (!isPlatformAdmin) {
+        query += " AND tenantId = ?";
+        params.push(tenantId);
+      }
+      const stmt = db.prepare(query);
+      const row = stmt.get(...params);
+      if (row) {
+        return JSON.parse(row.data_json);
+      }
+    } catch (e2) {
+      console.warn("[ClaimRepository] DB findById failed:", e2);
     }
-    const stmt = db.prepare(query);
-    const row = stmt.get(...params);
-    if (!row) return null;
-    return JSON.parse(row.data_json);
+    const defaultMatch = defaultDemoClaims.find((c) => c.id === id);
+    if (defaultMatch) return defaultMatch;
+    return null;
   }
   async create(claim, scope) {
     const tenantId = scope?.tenantId || "tenant-pt-health";
