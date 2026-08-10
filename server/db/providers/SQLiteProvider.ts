@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import { createRequire } from "module";
 import { DatabaseProviderAdapter, DatabaseCapabilities, DatabaseMetadata, QueryResult } from "../DatabaseProvider";
 
 export class SQLiteProvider implements DatabaseProviderAdapter {
@@ -22,7 +23,8 @@ export class SQLiteProvider implements DatabaseProviderAdapter {
   async connect(): Promise<void> {
     if (this.dbInstance) return;
     try {
-      const DatabaseModule = require("better-sqlite3");
+      const req = createRequire(import.meta.url);
+      const DatabaseModule = req("better-sqlite3");
       this.dbInstance = new DatabaseModule(this.dbPath);
       try {
         this.dbInstance.pragma('journal_mode = WAL');

@@ -1,16 +1,18 @@
 import path from "path";
 import fs from "fs";
+import { createRequire } from "module";
 
 const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 let sqliteDb: any = null;
 
 try {
-  // Dynamically require better-sqlite3 to prevent top-level native binary load crashes on Vercel Serverless (Linux)
-  const DatabaseModule = require("better-sqlite3");
+  // Dynamically require better-sqlite3 using ES Module createRequire to prevent ReferenceError
+  const req = createRequire(import.meta.url);
+  const DatabaseModule = req("better-sqlite3");
   const dbDir = isVercel ? "/tmp/data" : path.join(process.cwd(), "data");
   if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+    try { fs.mkdirSync(dbDir, { recursive: true }); } catch {}
   }
 
   try {
