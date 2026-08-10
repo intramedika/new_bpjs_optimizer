@@ -20675,7 +20675,7 @@ var require_application = __commonJS({
   "node_modules/express/lib/application.js"(exports2, module2) {
     "use strict";
     var finalhandler = require_finalhandler();
-    var Router16 = require_router();
+    var Router17 = require_router();
     var methods = require_methods();
     var middleware = require_init();
     var query = require_query();
@@ -20740,7 +20740,7 @@ var require_application = __commonJS({
     };
     app2.lazyrouter = function lazyrouter() {
       if (!this._router) {
-        this._router = new Router16({
+        this._router = new Router17({
           caseSensitive: this.enabled("case sensitive routing"),
           strict: this.enabled("strict routing")
         });
@@ -22604,7 +22604,7 @@ var require_express = __commonJS({
     var mixin = require_merge_descriptors();
     var proto = require_application();
     var Route = require_route();
-    var Router16 = require_router();
+    var Router17 = require_router();
     var req = require_request();
     var res = require_response();
     exports2 = module2.exports = createApplication;
@@ -22627,7 +22627,7 @@ var require_express = __commonJS({
     exports2.request = req;
     exports2.response = res;
     exports2.Route = Route;
-    exports2.Router = Router16;
+    exports2.Router = Router17;
     exports2.json = bodyParser.json;
     exports2.query = require_query();
     exports2.raw = bodyParser.raw;
@@ -50242,7 +50242,7 @@ __export(api_entry_exports, {
   default: () => api_entry_default
 });
 module.exports = __toCommonJS(api_entry_exports);
-var import_express16 = __toESM(require_express2());
+var import_express17 = __toESM(require_express2());
 
 // server/routes/integration.ts
 var import_express = __toESM(require_express2());
@@ -80027,6 +80027,63 @@ router2.get("/ai/health", authenticateRequest, async (req, res) => {
 });
 var codingRoutes_default = router2;
 
+// server/routes/aiRoutes.ts
+var import_express16 = __toESM(require_express2());
+var aiRoutes = (0, import_express16.Router)();
+aiRoutes.get(["/api/ai/health", "/ai/health"], async (req, res) => {
+  try {
+    const health = await aiManager.getHealth();
+    res.json(health);
+  } catch (error) {
+    res.status(500).json({
+      runtime: aiManager.getRuntime(),
+      provider: "unknown",
+      model: "unknown",
+      endpoint: "unknown",
+      status: "UNAVAILABLE",
+      latencyMs: 0,
+      error: error.message
+    });
+  }
+});
+aiRoutes.get(["/api/ai/models", "/ai/models"], async (req, res) => {
+  try {
+    const health = await aiManager.getHealth();
+    res.json({
+      activeRuntime: health.runtime,
+      activeProvider: health.provider,
+      activeModel: health.model,
+      endpoint: health.endpoint,
+      status: health.status,
+      supportedRuntimes: ["LOCAL", "VPS", "AI_SERVER", "VERCEL"],
+      availableProviders: ["ollama", "gemini", "local_fallback"],
+      details: health.details
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+aiRoutes.post(["/api/ai/extract", "/ai/extract"], async (req, res) => {
+  try {
+    const { text, filename, mimeType, hash } = req.body || {};
+    if (!text && !filename) {
+      return res.status(400).json({ error: "Document text or filename required" });
+    }
+    const result = await aiManager.extractClinicalEvidence(text || "", {
+      documentName: filename,
+      mimeType,
+      hash
+    });
+    res.json({
+      status: "success",
+      runtime: aiManager.getRuntime(),
+      extraction: result
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // server/integration/adapters/BaseAdapter.ts
 var BaseAdapter = class {
   getMetadata() {
@@ -81068,9 +81125,9 @@ try {
 } catch (e2) {
   console.warn("Integration hub init warning:", e2);
 }
-var app = (0, import_express16.default)();
-app.use(import_express16.default.json({ limit: "50mb" }));
-app.use(import_express16.default.urlencoded({ extended: true, limit: "50mb" }));
+var app = (0, import_express17.default)();
+app.use(import_express17.default.json({ limit: "50mb" }));
+app.use(import_express17.default.urlencoded({ extended: true, limit: "50mb" }));
 app.use((req, res, next) => {
   const matchedPath = req.headers["x-matched-path"] || req.headers["x-now-route-matches"];
   if (matchedPath && matchedPath.startsWith("/api")) {
@@ -81084,6 +81141,7 @@ app.use((req, res, next) => {
 app.use(authenticateRequest);
 app.use(integrationRoutes);
 app.use(healthRoutes);
+app.use(aiRoutes);
 app.use(localRoutes);
 app.use(statsRoutes);
 app.use(importRoutes);

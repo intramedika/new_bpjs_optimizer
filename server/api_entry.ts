@@ -51,6 +51,7 @@ app.use(authenticateRequest);
 
 app.use(integrationRoutes);
 app.use(healthRoutes);
+app.use(aiRoutes);
 app.use(localRoutes);
 app.use(statsRoutes);
 app.use(importRoutes);
