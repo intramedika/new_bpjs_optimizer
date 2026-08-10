@@ -44,6 +44,7 @@ export default function Documentation() {
     { id: "canonical-workflow", title: "Infografis Alur 10-Langkah Klaim", icon: Workflow, category: "Alur Utama" },
     { id: "integration-branches", title: "Infografis Cabang Integrasi (VClaim vs E-Klaim)", icon: Settings, category: "Integrasi" },
     { id: "revenue-optimizer-flow", title: "Infografis Revenue Optimizer Engine", icon: TrendingUp, category: "Optimizer" },
+    { id: "data-purge-reset", title: "Infografis Data Purge & System Reset", icon: RefreshCw, category: "Administrasi" },
     { id: "quick-start", title: "Quick Start — 10 Menit Pertama", icon: Sparkles, category: "Memulai" },
     { id: "data-modes", title: "Data Modes (REAL, DEMO, TEST, MOCK)", icon: Layers, category: "Konsep Inti" },
     { id: "claim-management", title: "Claim Queue & Manajemen Data", icon: FileText, category: "Klaim" },
@@ -294,6 +295,44 @@ export default function Documentation() {
                     <p className="text-slate-300 text-xs mt-0.5">Potensi Peningkatan (Rp Delta) dihitung dari rekomendasi terbukti. Realisasi Pendapatan baru dikonfirmasi setelah hasil aktual E-Klaim diterima.</p>
                   </div>
                   <Badge className="bg-emerald-600 text-white font-bold text-xs shrink-0 font-mono">EVIDENCE-BASED ✓</Badge>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* INFOGRAFIS DATA PURGE & SYSTEM RESET */}
+          {activeTab === "data-purge-reset" && (
+            <div className="space-y-6 font-sans">
+              <div>
+                <Badge className="bg-red-600 text-white font-bold mb-2">INFOGRAFIS ADMINISTRASI</Badge>
+                <h2 className="text-xl font-bold text-slate-900 font-mono">Fitur Hapus Data Transaksi & System Reset Console</h2>
+                <p className="text-slate-600 text-xs mt-1">Administrator dapat membersihkan seluruh transaksi atau dokumen PDF intake yang terlanjur masuk di sistem secara aman.</p>
+              </div>
+
+              <div className="p-6 bg-red-950 text-red-100 border border-red-800 rounded-2xl space-y-4 font-mono text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="p-3 bg-red-900/60 border border-red-800 rounded-xl space-y-1">
+                    <span className="text-[10px] font-bold text-red-300 block uppercase">LANGKAH 1</span>
+                    <strong className="text-white text-xs block">Akses Admin Console</strong>
+                    <span className="text-[10px] text-red-200/70 font-sans block">Buka menu /admin atau /admin/database.</span>
+                  </div>
+
+                  <div className="p-3 bg-red-900/60 border border-red-800 rounded-xl space-y-1">
+                    <span className="text-[10px] font-bold text-red-300 block uppercase">LANGKAH 2</span>
+                    <strong className="text-white text-xs block">Trigger Purge Action</strong>
+                    <span className="text-[10px] text-red-200/70 font-sans block">Tekan tombol [ HAPUS SEMUA DATA TRANSAKSI & DOKUMEN ].</span>
+                  </div>
+
+                  <div className="p-3 bg-red-900/60 border border-red-800 rounded-xl space-y-1">
+                    <span className="text-[10px] font-bold text-red-300 block uppercase">LANGKAH 3</span>
+                    <strong className="text-white text-xs block">Cascade Database Purge</strong>
+                    <span className="text-[10px] text-red-200/70 font-sans block">Purge 9 tabel transaksi DB & clear browser LocalStorage.</span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-red-900 border border-red-700 rounded-xl flex items-center justify-between text-xs font-mono text-red-200">
+                  <span>Tabel Terpengaruh: claims, documents, clinical_findings, coding_candidates, reconciliation_records, revenue_opportunities, sync_queue.</span>
+                  <Badge className="bg-red-600 text-white font-bold text-[9px]">PURGE COMPLETE ✓</Badge>
                 </div>
               </div>
             </div>
