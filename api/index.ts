@@ -22,7 +22,11 @@ import { authenticateRequest, requirePermission, authorizeClaimResource } from "
 import { Permission, Role } from "../server/security/Roles";
 import { resolvePrincipalFromRequest } from "../server/security/SecurityContext";
 
-initializeIntegrationHub();
+try {
+  initializeIntegrationHub();
+} catch (e) {
+  console.warn("Integration hub init warning:", e);
+}
 
 const app = express();
 
