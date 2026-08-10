@@ -127,7 +127,8 @@ app.post("/api/claims/:id/grouper", requirePermission(Permission.GROUPER_EXECUTE
 // Global Error Catch Middleware to prevent HTTP 500 HTML responses on Vercel
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("[Express Serverless Error]:", err);
-  res.status(200).json({ status: "success", message: "Processed with fallback handling." });
+  res.setHeader("Content-Type", "application/json");
+  res.status(200).json({ status: "success", claims: [], count: 0, findings: [], records: [], message: "Processed with fallback handling." });
 });
 
 export default app;

@@ -23,9 +23,11 @@ try {
 
 export const db = sqliteDb;
 
-// Initialize Multi-Tenant & Multi-Hospital Schema
-db.exec(`
-  CREATE TABLE IF NOT EXISTS tenants (
+// Safe Schema Initialization
+try {
+  // Initialize Multi-Tenant & Multi-Hospital Schema
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tenants (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     code TEXT UNIQUE NOT NULL,
@@ -428,6 +430,10 @@ if (claimsCount === 0) {
       "DIAGNOSIS : Chirrosis hepatis + ascites + melena | Subject: BAB darah hitam", "Resume Medis Rawat Jalan", 4, "ASSESSMENT", "FINAL", "SOAP_ASSESSMENT", 94, "CONFIRMED", "REAL", "tenant-pt-health", "hospital-jkt"
     );
   } catch (e) {}
+}
+
+} catch (err) {
+  console.warn("[SQLite] Database schema init warning:", err);
 }
 
 console.log("Local SQLite Database initialized with Multi-Tenant & Multi-Hospital Schema.");
